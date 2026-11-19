@@ -1,0 +1,1941 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ITCMD: o imposto sobre herança e doação depois da reforma</title>
+
+<!-- Uma fonte de títulos e uma de texto, só do Google Fonts (nada mais remoto). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Esta classe entra antes da primeira pintura: tudo sob html.js só vale quando o JS rodou (é assim que o aviso sem JS funciona). -->
+<script>document.documentElement.classList.add('js');</script>
+
+<style>
+  :root{
+    /* ---- tokens: a identidade do deck (veja design-tokens.md) ---- */
+    --bg:#F5F4EF;
+    --surface:#FFFFFF;
+    --tx:#1F2328;
+    --mut:#586069;
+    --tx-rgb:31,35,40;
+    --bg-rgb:245,244,239;
+    --line:rgba(var(--tx-rgb),.18);
+
+    --accent:#0B6A9E;
+    --accent-hi:#095782;
+    --accent-lo:#B3CDD8;
+    --accent-rgb:11,106,158;
+    --accent2:#C2410C;
+    --accent2-hi:#9F350A;
+    --accent2-lo:#E7C2AF;
+    --accent2-rgb:194,65,12;
+
+    --sec:var(--accent);          /* "destaque da parte atual": sobrescreva por parte */
+    --sec-hi:var(--accent-hi);
+    --sec-lo:var(--accent-lo);
+    --sec-rgb:var(--accent-rgb);
+
+    --display:'Epilogue',Georgia,serif;
+    --sans:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:#000; color:var(--tx); font-family:var(--sans);
+    overflow:hidden; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  body.idle{ cursor:none; } /* esconde o cursor parado em tela cheia */
+
+  /* ---- palco: tudo é desenhado em 1920x1080 ---- */
+  #viewport{ position:relative; width:100%; height:100%; overflow:hidden; }
+  #stage{
+    position:absolute; left:50%; top:50%; width:1920px; height:1080px;
+    transform:translate(-50%,-50%) scale(var(--s,1)); transform-origin:center center;
+    background:var(--bg); overflow:hidden;
+  }
+
+  /* ---- sistema de slides ---- */
+  .slide{
+    position:absolute; inset:0; background:var(--bg); color:var(--tx);
+    opacity:0; visibility:hidden; transform:scale(.985) translateY(14px);
+    transition:opacity .4s ease, transform .6s cubic-bezier(.2,.7,.2,1), visibility 0s linear .4s;
+  }
+  .slide.active{ opacity:1; visibility:visible; transform:none; transition:opacity .4s ease, transform .65s cubic-bezier(.2,.7,.2,1); }
+
+  /* ---- entrada escalonada: class="rv" + style="--d:.4s" (escalone o atraso por elemento) ---- */
+  .js .rv{ opacity:0; transform:translateY(20px); transition:opacity .3s ease, transform 0s linear .3s; }
+  .js .slide.active .rv{ opacity:1; transform:none; transition:opacity .8s ease var(--d,0s), transform .9s cubic-bezier(.2,.7,.2,1) var(--d,0s); }
+
+  /* ---- revelação passo a passo: class="frag" (resposta de pergunta, gabarito, resolução de caso). O apresentador aperta →
+         e o próximo .frag aparece; nada aparece por tempo. Não junte .frag e .rv no mesmo elemento: anime o que estiver
+         DENTRO com .frag.on (ex.: .slide.active .frag.on .carimbo{ animation:... }). ---- */
+  .js .frag{ opacity:0; transform:translateY(14px); transition:opacity .45s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .js .frag.on{ opacity:1; transform:none; }
+
+  /* ---- controles: progresso, anterior/próximo, dica, região ao vivo ---- */
+  #progress{ position:absolute; left:0; bottom:0; height:6px; width:0; background:var(--accent); transition:width .35s ease; z-index:5; }
+  #hud{ position:absolute; top:14px; right:14px; display:flex; gap:8px; opacity:0; transition:opacity .25s; z-index:6; }
+  body.moving #hud{ opacity:1; }
+  @media (hover:none){ #hud{ opacity:.6; } }
+  #hud button{ width:44px; height:44px; border-radius:50%; border:1px solid var(--line); cursor:pointer; background:rgba(var(--bg-rgb),.92); color:var(--tx); font:600 20px/1 var(--sans); }
+  #hud button:focus-visible{ outline:2px solid var(--accent-hi); outline-offset:2px; }
+  #hint{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); background:rgba(var(--bg-rgb),.94); color:var(--tx); padding:11px 20px; border-radius:999px; border:1px solid var(--line); font-size:14px; font-weight:500; white-space:nowrap; transition:opacity .6s; z-index:6; }
+  #hint.gone{ opacity:0; pointer-events:none; }
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  /* ---- aviso sem JS: só aparece se o html nunca ganhou a classe .js ---- */
+  #nojs{ display:none; }
+  html:not(.js) #viewport{ display:none; }
+  html:not(.js) #nojs{
+    display:flex; position:fixed; inset:0; z-index:9999; background:var(--bg); color:var(--tx);
+    align-items:center; justify-content:center; text-align:center; padding:60px;
+    font-family:var(--sans); font-size:22px; line-height:1.6;
+  }
+  #nojs .bx{ max-width:620px; }
+  #nojs h2{ font-family:var(--display); font-weight:700; font-size:34px; margin-bottom:18px; color:var(--accent-hi); }
+  #nojs p{ color:var(--mut); }
+  #nojs b{ color:var(--tx); }
+
+  /* ---- movimento reduzido: cada animação acrescentada precisa de uma linha aqui com o estado FINAL ---- */
+  @media (prefers-reduced-motion: reduce){
+    .slide,.slide.active{ transition:none; transform:none; }
+    .js .rv,.js .slide.active .rv{ opacity:1; transform:none; transition:none; }
+    .js .frag{ transform:none; transition:none; }
+    #progress{ transition:none; }
+    /* acrescente aqui as regras dos elementos animados do deck */
+  }
+
+/* ===== kit do deck ===== */
+/* ===== KIT · Jornalismo de dados · ITCMD (todas as classes começam com k-) ===== */
+
+/* uso: papel de gráfico; div vazia como primeiro filho do slide (fundo liso + leve grade de eixos cinza) */
+.k-textura{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(var(--tx-rgb),.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(var(--tx-rgb),.05) 1px,transparent 1px),
+    linear-gradient(rgba(var(--tx-rgb),.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(var(--tx-rgb),.025) 1px,transparent 1px);
+  background-size:120px 120px,120px 120px,24px 24px,24px 24px;}
+/* uso: versão mais discreta da textura (slides densos); junto de .k-textura */
+.k-textura--leve{opacity:.55;}
+
+/* uso: caixa da área segura (x 96–1824, y 72–1008); todo conteúdo do slide vai dentro dela, filhos com position:absolute */
+.k-area{position:absolute;left:96px;top:72px;width:1728px;height:936px;z-index:1;}
+
+/* ---------- Escala tipográfica ---------- */
+/* uso: título de abertura da capa (130 px, display); pode ter um <span> maior (até 180 px) */
+.k-titulo-abertura{font-family:var(--display);font-weight:700;font-size:130px;line-height:1.05;letter-spacing:-.02em;color:var(--tx);margin:0;}
+/* uso: título de slide (68 px, display); no máximo 2 linhas em largura ≥ 1100 px */
+.k-titulo{font-family:var(--display);font-weight:700;font-size:68px;line-height:1.1;letter-spacing:-.015em;color:var(--tx);margin:0;}
+/* uso: frase-chave grande dos slides de foco/citação (56 px, display) */
+.k-frase{font-family:var(--display);font-weight:700;font-size:56px;line-height:1.15;letter-spacing:-.01em;color:var(--tx);margin:0;}
+/* uso: número gigante (280 px, display) com contagem ou valor; combine com .k-azul ou .k-laranja */
+.k-numero{font-family:var(--display);font-weight:700;font-size:280px;line-height:.95;letter-spacing:-.04em;color:var(--sec-hi);margin:0;}
+/* uso: texto corrido curto (30 px, sans); defina sempre width/max-width (≤ 60 caracteres por linha) */
+.k-texto{font-family:var(--sans);font-weight:400;font-size:30px;line-height:1.45;color:var(--tx);margin:0;}
+/* uso: texto de apoio menor (26 px, cor secundária) */
+.k-apoio{font-family:var(--sans);font-weight:400;font-size:26px;line-height:1.45;color:var(--mut);margin:0;}
+/* uso: rótulo em caixa-alta espaçada (20 px) para categorias, “Parte”, eixos */
+.k-rotulo{font-family:var(--sans);font-weight:700;font-size:20px;line-height:1.3;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:0;}
+/* uso: legenda direta colada ao dado (ponto, barra, marco), 22 px negrito */
+.k-leg{font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.25;color:var(--tx);white-space:nowrap;}
+/* uso: texto em azul (a regra); texto de destaque seguro sobre o fundo */
+.k-azul{color:var(--sec-hi);}
+/* uso: texto em laranja (alerta ou exceção) */
+.k-laranja{color:var(--accent2-hi);}
+
+/* ---------- Motivo: pontos, barras e balões de anotação ---------- */
+/* uso: ponto de dado azul (regra); defina o diâmetro com style="--s:60px" */
+.k-ponto{--s:48px;display:block;width:var(--s);height:var(--s);border-radius:50%;background:var(--sec);box-shadow:0 0 0 6px rgba(var(--sec-rgb),.16);position:relative;}
+/* uso: ponto laranja (alerta/exceção); junto de .k-ponto */
+.k-ponto--alerta{background:var(--accent2);box-shadow:0 0 0 6px rgba(var(--accent2-rgb),.18);}
+/* uso: ponto cinza (referência/neutro); junto de .k-ponto */
+.k-ponto--cinza{background:var(--line);box-shadow:none;}
+/* uso: pulso contínuo e discreto ao redor de um ponto; junto de .k-ponto (anel via ::after) */
+.k-pulsa::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--sec);opacity:0;}
+.slide.active .k-pulsa::after{animation:k-pulsa 2.4s ease-out var(--d,1.5s) infinite;}
+@keyframes k-pulsa{0%{transform:scale(1);opacity:.55;}100%{transform:scale(2.2);opacity:0;}}
+
+/* uso: balão de anotação laranja apontando para baixo, para o número que importa; position:absolute, defina left/top/width */
+.k-balao{--bc:var(--accent2);position:absolute;background:var(--surface);border:2px solid var(--bc);border-radius:12px;padding:12px 24px;font-family:var(--sans);font-weight:700;font-size:26px;line-height:1.25;color:var(--tx);text-align:center;z-index:3;}
+.k-balao::after{content:"";position:absolute;left:50%;margin-left:-10px;bottom:-12px;width:18px;height:18px;background:var(--surface);border:2px solid var(--bc);border-top:0;border-left:0;transform:rotate(45deg);}
+/* uso: balão azul (explica a regra); junto de .k-balao */
+.k-balao--azul{--bc:var(--sec);}
+/* uso: balão com a ponta para cima (aponta para um dado acima dele); junto de .k-balao */
+.k-balao--cima::after{bottom:auto;top:-12px;transform:rotate(225deg);}
+/* uso: linha-guia tracejada laranja (vertical) ligando balão ao dado; defina left/top/height */
+.k-guia{position:absolute;width:0;border-left:3px dashed var(--accent2);z-index:2;}
+
+/* uso: eixo/fio horizontal de gráfico (3 px, grafite); defina left/top/width; anima com .k-eixo-x */
+.k-eixo{position:absolute;height:3px;background:var(--tx);border-radius:2px;}
+/* uso: fio fino cinza de divisória ou grade (2 px) */
+.k-fio{position:absolute;height:2px;background:var(--line);}
+/* uso: barra de dado azul vertical; defina left/bottom/width/height; cresce com .k-cresce */
+.k-barra{position:absolute;background:var(--sec);border-radius:6px 6px 0 0;}
+/* uso: barra cinza (referência); junto de .k-barra */
+.k-barra--cinza{background:var(--line);}
+/* uso: barra/faixa laranja (alerta, dedução, exceção); junto de .k-barra */
+.k-barra--alerta{background:var(--accent2);}
+/* uso: etiqueta de marca de página no canto superior direito (rótulo curto + ponto azul) */
+.k-marca{position:absolute;top:72px;right:96px;display:flex;align-items:center;gap:12px;font-family:var(--sans);font-weight:700;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);z-index:2;}
+.k-marca::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--sec);}
+
+/* ---------- Painéis e cartões ---------- */
+/* uso: cartão branco com sombra difusa e fio; conteúdo curto (título + até 20 palavras) */
+.k-cartao{background:var(--surface);border:2px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(var(--tx-rgb),.08);padding:32px 36px;box-sizing:border-box;position:relative;}
+/* uso: cartão com topo azul de 6 px (regra); junto de .k-cartao */
+.k-cartao--azul{border-top:6px solid var(--sec);}
+/* uso: cartão com topo laranja de 6 px (alerta/exceção); junto de .k-cartao */
+.k-cartao--alerta{border-top:6px solid var(--accent2);}
+/* uso: painel plano sem sombra, só fio e fundo branco, para grupos e gabaritos */
+.k-painel{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:28px 32px;box-sizing:border-box;}
+/* uso: número em círculo (1, 2, 3…) para passos, itens e balões numerados */
+.k-num{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:var(--sec);color:var(--surface);font-family:var(--display);font-weight:700;font-size:30px;flex:none;}
+/* uso: círculo de origem/destino (contorno azul, fundo branco); defina left/top e tamanho */
+.k-circulo{position:absolute;border-radius:50%;border:3px solid var(--sec);background:var(--surface);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.25;color:var(--tx);box-sizing:border-box;padding:24px;}
+
+/* ---------- Entradas (variações de .rv; use JUNTO de .rv + style="--d:.3s") ---------- */
+/* uso: entra vindo da esquerda */
+.js .rv.k-esq{transform:translateX(-48px);}
+/* uso: entra vindo da direita */
+.js .rv.k-dir{transform:translateX(48px);}
+/* uso: desce de cima (anotações que aparecem apontando) */
+.js .rv.k-cima{transform:translateY(-28px);}
+/* uso: surge com leve escala (cartões, balões) */
+.js .rv.k-zoom{transform:scale(.92);}
+/* uso: máscara da esquerda para a direita (títulos, manchetes) */
+.js .rv.k-mascara{transform:none;clip-path:inset(-12px 100% -12px -12px);transition:opacity .3s ease,clip-path 0s linear .3s;}
+.js .slide.active .rv.k-mascara{clip-path:inset(-12px -12px -12px -12px);transition:opacity .5s ease var(--d,0s),clip-path .9s cubic-bezier(.65,0,.35,1) var(--d,0s);}
+
+/* ---------- Animações de dado (chaveadas em .slide.active; defina --d) ---------- */
+/* uso: barra/coluna que cresce de baixo para cima */
+.k-cresce{transform-origin:bottom center;transform:scaleY(0);}
+.slide.active .k-cresce{animation:k-cresce .85s cubic-bezier(.2,.85,.2,1) var(--d,0s) both;}
+@keyframes k-cresce{0%{transform:scaleY(0);}100%{transform:scaleY(1);}}
+/* uso: barra/eixo/linha que cresce da esquerda para a direita */
+.k-eixo-x{transform-origin:left center;transform:scaleX(0);}
+.slide.active .k-eixo-x{animation:k-eixo-x 1s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+@keyframes k-eixo-x{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
+/* uso: traço SVG que se desenha (defina --len com o comprimento do caminho) */
+.k-traco{fill:none;stroke:var(--sec);stroke-width:4;stroke-linecap:round;stroke-dasharray:var(--len,1000);stroke-dashoffset:var(--len,1000);}
+.slide.active .k-traco{animation:k-traco 1.2s ease-out var(--d,0s) both;}
+@keyframes k-traco{0%{stroke-dashoffset:var(--len,1000);}100%{stroke-dashoffset:0;}}
+/* uso: anotação/balão/ponto que surge “apontando” (sobe um pouco e assenta) */
+.k-pop{opacity:0;transform:translateY(-12px) scale(.9);}
+.slide.active .k-pop{animation:k-pop .55s cubic-bezier(.2,.8,.2,1) var(--d,0s) both;}
+@keyframes k-pop{0%{opacity:0;transform:translateY(-12px) scale(.9);}100%{opacity:1;transform:translateY(0) scale(1);}}
+/* uso: surge só com fade (legendas e fios que acompanham um dado) */
+.k-fade{opacity:0;}
+.slide.active .k-fade{animation:k-fade .6s ease var(--d,0s) both;}
+@keyframes k-fade{0%{opacity:0;}100%{opacity:1;}}
+/* uso: deriva lenta e discreta (micro-movimento) para pontos decorativos */
+.slide.active .k-flutua{animation:k-flutua 6s ease-in-out var(--d,0s) infinite alternate;}
+@keyframes k-flutua{0%{transform:translateY(0);}100%{transform:translateY(-10px);}}
+
+/* ---------- Layouts por composição (contêiner = área segura; slots com largura definida) ---------- */
+/* uso: contêiner de qualquer composição; coloque dentro do slide como filho direto */
+.k-capa,.k-roteiro,.k-grade,.k-duas,.k-diagrama,.k-numero-grande,.k-foco,.k-linha,.k-passos,.k-caso,.k-cena,.k-pergunta,.k-recap,.k-encerramento{position:absolute;left:96px;top:72px;width:1728px;height:936px;z-index:1;}
+
+/* uso: capa — título gigante no alto à esquerda */
+.k-capa-tit{position:absolute;left:0;top:24px;width:1300px;}
+/* uso: capa — subtítulo curto (até 2 linhas) */
+.k-capa-sub{position:absolute;left:0;top:420px;width:1000px;}
+/* uso: capa — contexto pequeno (disciplina, turma, data) no rodapé */
+.k-capa-ctx{position:absolute;left:0;bottom:0;width:900px;}
+
+/* uso: título de slide no topo de qualquer composição (largura 1400, 2 linhas no máximo) */
+.k-roteiro-tit,.k-grade-tit,.k-duas-tit,.k-diagrama-tit,.k-linha-tit,.k-passos-tit,.k-caso-tit,.k-cena-tit,.k-recap-tit{position:absolute;left:0;top:0;width:1400px;}
+/* uso: roteiro — lista de 3 a 6 paradas, grade de colunas iguais (--cols) */
+.k-roteiro-lista{position:absolute;left:0;top:300px;width:1728px;display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:24px;}
+/* uso: grade — corpo com 3 a 6 cartões (--cols = colunas; padrão 3) */
+.k-grade-corpo{position:absolute;left:0;top:220px;width:1728px;height:716px;display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:24px;align-content:start;}
+/* uso: duas-colunas — bloco da esquerda (A, regra, antes) */
+.k-duas-a{position:absolute;left:0;top:220px;width:804px;height:716px;}
+/* uso: duas-colunas — bloco da direita (B, exceção, agora) */
+.k-duas-b{position:absolute;left:924px;top:220px;width:804px;height:716px;}
+/* uso: duas-colunas — marcador central (×, seta) entre os blocos */
+.k-duas-meio{position:absolute;left:804px;top:520px;width:120px;text-align:center;font-family:var(--display);font-weight:700;font-size:56px;color:var(--mut);}
+/* uso: diagrama — palco para nós e conectores (posicione os nós dentro) */
+.k-diagrama-palco{position:absolute;left:0;top:200px;width:1728px;height:736px;}
+/* uso: nó de diagrama (caixa branca com fio azul, rótulo curto); defina left/top/width */
+.k-no{position:absolute;background:var(--surface);border:2px solid var(--sec);border-radius:12px;padding:14px 24px;box-sizing:border-box;font-family:var(--sans);font-weight:700;font-size:26px;line-height:1.25;color:var(--tx);text-align:center;}
+/* uso: número-grande — o número (280 px) à esquerda */
+.k-ng-num{position:absolute;left:0;top:140px;width:1000px;}
+/* uso: número-grande — frase de contexto ao lado/abaixo do número */
+.k-ng-txt{position:absolute;left:0;top:520px;width:900px;}
+/* uso: número-grande — palco da cena à direita */
+.k-ng-cena{position:absolute;left:1040px;top:120px;width:688px;height:816px;}
+/* uso: foco — frase-chave grande (56–72 px) */
+.k-foco-frase{position:absolute;left:0;top:240px;width:1000px;}
+/* uso: foco — até duas linhas de apoio abaixo da frase */
+.k-foco-apoio{position:absolute;left:0;top:600px;width:900px;}
+/* uso: foco — palco da cena à direita da frase */
+.k-foco-cena{position:absolute;left:1080px;top:120px;width:648px;height:816px;}
+/* uso: linha-do-tempo — palco do eixo e marcos (até 7) */
+.k-linha-palco{position:absolute;left:0;top:240px;width:1728px;height:640px;}
+/* uso: passos — fila de etapas numeradas lado a lado */
+.k-passos-lista{position:absolute;left:0;top:260px;width:1728px;display:flex;gap:24px;align-items:stretch;}
+/* uso: passos — cada etapa (cartão flexível); use com .k-cartao */
+.k-passo{flex:1;min-width:0;}
+/* uso: caso — situação (narrativa curta) à esquerda */
+.k-caso-situacao{position:absolute;left:0;top:220px;width:804px;}
+/* uso: caso — análise/resolução à direita; ponha a resolução em class="frag" */
+.k-caso-analise{position:absolute;left:924px;top:220px;width:804px;}
+/* uso: cena — título e frase curta no alto; a cena ocupa o palco abaixo */
+.k-cena-txt{position:absolute;left:0;top:130px;width:1100px;}
+/* uso: cena — palco grande da cena (abaixo do título) */
+.k-cena-palco{position:absolute;left:0;top:260px;width:1728px;height:676px;}
+/* uso: pergunta — enunciado grande e sozinho (80 px) */
+.k-pergunta-q{position:absolute;left:0;top:180px;width:1500px;font-family:var(--display);font-weight:700;font-size:80px;line-height:1.1;letter-spacing:-.02em;color:var(--tx);margin:0;}
+/* uso: pergunta — alternativas em blocos curtos; a resposta vai em class="frag" */
+.k-pergunta-alts{position:absolute;left:0;top:520px;width:1728px;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+/* uso: recap — lista de 3 a 5 pontos-chave em colunas iguais (--cols) */
+.k-recap-lista{position:absolute;left:0;top:260px;width:1728px;display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:24px;}
+/* uso: encerramento — palco da cena (ocupa tudo) */
+.k-enc-palco{position:absolute;left:0;top:0;width:1728px;height:936px;}
+/* uso: encerramento — título curto que entra depois da cena */
+.k-enc-tit{position:absolute;left:0;top:60px;width:1000px;}
+
+/* ---------- Movimento reduzido: estado final estável ---------- */
+@media (prefers-reduced-motion:reduce){
+  .js .rv.k-esq,.js .rv.k-dir,.js .rv.k-cima,.js .rv.k-zoom{transform:none !important;}
+  .js .rv.k-mascara{clip-path:none !important;transition:none !important;}
+  .k-cresce,.k-eixo-x{animation:none !important;transform:none !important;}
+  .k-traco{animation:none !important;stroke-dashoffset:0 !important;}
+  .k-pop,.k-fade{animation:none !important;opacity:1 !important;transform:none !important;}
+  .k-flutua{animation:none !important;}
+  .k-pulsa::after{animation:none !important;opacity:0 !important;}
+}
+
+/* ===== slide 1 ===== */
+.s1 .tit{position:absolute;left:96px;top:96px;width:1300px;z-index:2;}
+.s1 .sigla{display:block;font-size:180px;line-height:.95;letter-spacing:-.03em;color:var(--sec-hi);}
+.s1 .tit2{display:block;margin-top:14px;font-size:64px;line-height:1.1;letter-spacing:-.015em;color:var(--tx);}
+.s1 .sub{position:absolute;left:96px;top:510px;width:1000px;z-index:2;font-size:32px;}
+.s1 .deco{position:absolute;left:0;top:0;width:1920px;height:600px;z-index:1;pointer-events:none;}
+.s1 .deco i{position:absolute;display:block;border-radius:50%;width:var(--s);height:var(--s);background:var(--c);opacity:.7;}
+.s1 .cena{position:absolute;left:0;top:620px;width:1920px;height:380px;z-index:2;}
+.s1 .circ{top:110px;width:240px;height:240px;}
+.s1 .circ-e{left:96px;}
+.s1 .circ-d{left:1584px;background-color:var(--surface);}
+.slide.active .s1 .circ-d, .s1.active .circ-d{animation:chega-s1 .8s ease-out 2.3s both;}
+.s1 .anel{position:absolute;left:1584px;top:110px;width:240px;height:240px;border-radius:50%;border:3px solid var(--sec);opacity:0;}
+.s1.active .anel{animation:anel-s1 2.4s ease-out 2.5s infinite;}
+.s1 .eixo{left:336px;top:229px;width:1228px;}
+.s1 .seta{position:absolute;left:1560px;top:218px;width:0;height:0;border-left:24px solid var(--tx);border-top:12px solid transparent;border-bottom:12px solid transparent;opacity:0;}
+.s1.active .seta{animation:fade-s1 .4s ease 1.6s both;}
+.s1 .pt{position:absolute;left:calc(var(--x) - var(--s) / 2);top:calc(230px - var(--s) / 2);width:var(--s);height:var(--s);z-index:3;opacity:0;transform:translateX(var(--from)) scale(.4);}
+.s1.active .pt{animation:viaja-s1 1s cubic-bezier(.2,.8,.2,1) var(--d) both;}
+.s1 .pt .k-leg{position:absolute;left:50%;top:calc(100% + 16px);transform:translateX(-50%);opacity:0;}
+.s1.active .pt .k-leg{animation:fade-s1 .5s ease calc(var(--d) + .9s) both;}
+.s1 .bal{left:905px;top:50px;width:280px;opacity:0;}
+.s1.active .bal{animation:pop-s1 .55s cubic-bezier(.2,.8,.2,1) 2s both;}
+.s1 .guia{left:1044px;top:120px;height:102px;opacity:0;}
+.s1.active .guia{animation:fade-s1 .5s ease 2.3s both;}
+.s1 .alvo{position:absolute;left:1035px;top:221px;width:18px;height:18px;border-radius:50%;background:var(--accent2);z-index:3;opacity:0;}
+.s1.active .alvo{animation:fade-s1 .4s ease 2.4s both;}
+@keyframes viaja-s1{
+  0%{transform:translateX(var(--from)) scale(.4);opacity:0;}
+  12%{opacity:1;transform:translateX(var(--from)) scale(.4);}
+  100%{transform:translateX(0) scale(1);opacity:1;}
+}
+@keyframes fade-s1{0%{opacity:0;}100%{opacity:1;}}
+@keyframes pop-s1{
+  0%{opacity:0;transform:translateY(-12px) scale(.9);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes chega-s1{0%{background-color:var(--surface);}100%{background-color:var(--accent-lo);}}
+@keyframes anel-s1{0%{opacity:.5;transform:scale(1);}100%{opacity:0;transform:scale(1.35);}}
+@media (prefers-reduced-motion:reduce){.s1 .pt{animation:none !important;opacity:1 !important;transform:none !important;}
+.s1 .pt .k-leg, .s1 .seta, .s1 .guia, .s1 .alvo{animation:none !important;opacity:1 !important;}
+.s1 .bal{animation:none !important;opacity:1 !important;transform:none !important;}
+.s1 .circ-d{animation:none !important;background-color:var(--accent-lo) !important;}
+.s1 .anel{animation:none !important;opacity:0 !important;}}
+
+/* ===== slides 2, 3, 4, 5 ===== */
+.s2 .k-roteiro-tit, .s3 .k-grade-tit, .s4 .k-duas-tit, .s5 .k-diagrama-tit{width:1200px;}
+.s2 .linha{left:28px;top:439px;width:1402px;height:6px;background:var(--sec);}
+.s2.active .linha.k-eixo-x{animation:desenha-s2 1.6s linear .5s both;}
+@keyframes desenha-s2{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
+.s2 .parada{position:absolute;top:412px;opacity:0;box-shadow:0 0 0 8px rgba(var(--sec-rgb),.16);}
+.s2.active .parada{animation:acende-s2 .5s cubic-bezier(.2,.8,.2,1) var(--d,0s) both;}
+@keyframes acende-s2{0%{opacity:0;transform:scale(.5);}60%{opacity:1;transform:scale(1.15);}100%{opacity:1;transform:scale(1);}}
+.s2 .k-roteiro-lista{top:520px;}
+.s2 .item{font-family:var(--display);font-weight:700;font-size:32px;line-height:1.25;letter-spacing:-.01em;color:var(--tx);margin:0;max-width:326px;}
+@media (prefers-reduced-motion:reduce){.s2 .linha{animation:none !important;transform:none !important;}
+.s2 .parada{animation:none !important;opacity:1 !important;transform:none !important;}}
+.s3 .k-grade-corpo{--cols:6;grid-template-rows:346px 346px;}
+.s3 .c1, .s3 .c2, .s3 .c3, .s3 .c4{grid-column:span 2;}
+.s3 .c5{grid-column:span 4;display:flex;align-items:center;gap:48px;}
+.s3 .topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.s3 .ico{width:56px;height:56px;fill:none;stroke:var(--sec);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;}
+.s3 .h{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.15;letter-spacing:-.01em;color:var(--tx);margin:0;}
+.s3 .d{font-family:var(--sans);font-size:26px;line-height:1.4;color:var(--tx);margin:10px 0 0;}
+.s3 .esq{width:400px;flex:none;}
+.s3 .pic{flex:1;display:flex;justify-content:space-between;align-items:flex-end;}
+.s3 .pi{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.s3 .pic .k-ponto{--s:56px;opacity:0;}
+.s3.active .pic .k-ponto{animation:pula-s3 .9s cubic-bezier(.3,.7,.4,1) var(--d,0s) both;}
+@keyframes pula-s3{
+  0%{opacity:0;transform:translateY(-130px) scale(.8);}
+  15%{opacity:1;transform:translateY(-110px) scale(.9);}
+  60%{opacity:1;transform:translateY(0) scale(1.12,.88);}
+  80%{opacity:1;transform:translateY(-12px) scale(.97,1.03);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.s3 .d1{background:var(--accent);box-shadow:0 0 0 6px rgba(var(--accent-rgb),.16);}
+.s3 .d2{background:var(--accent2);box-shadow:0 0 0 6px rgba(var(--accent2-rgb),.18);}
+.s3 .d3{background:var(--tx);box-shadow:0 0 0 6px rgba(var(--tx-rgb),.14);}
+.s3 .d4{background:var(--mut);box-shadow:0 0 0 6px rgba(var(--tx-rgb),.1);}
+.s3 .d5{background:var(--accent-lo);border:3px solid var(--accent);box-sizing:border-box;box-shadow:0 0 0 6px rgba(var(--accent-rgb),.12);}
+@media (prefers-reduced-motion:reduce){.s3 .pic .k-ponto{animation:none !important;opacity:1 !important;transform:none !important;}}
+.s4 .bloco{position:absolute;left:0;top:0;width:804px;height:716px;}
+.s4 .b2{--sec:var(--accent2);--sec-hi:var(--accent2-hi);--sec-lo:var(--accent2-lo);--sec-rgb:var(--accent2-rgb);}
+.s4 .k-duas-meio{top:546px;}
+.s4 .nome{position:absolute;left:36px;top:30px;margin:0;font-family:var(--display);font-weight:700;font-size:84px;line-height:1.05;letter-spacing:-.02em;color:var(--sec-hi);}
+.s4 .chip{position:absolute;right:36px;top:52px;display:flex;align-items:center;gap:12px;padding:8px 24px;border:2px solid var(--sec);border-radius:999px;background:var(--surface);font-family:var(--sans);font-weight:700;font-size:28px;line-height:1.2;color:var(--sec-hi);}
+.s4 .chip::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--sec);}
+.s4 .txt{position:absolute;left:36px;top:150px;width:720px;}
+.s4 .cena{position:absolute;left:36px;top:370px;width:732px;height:270px;}
+.s4 .cena .k-circulo{top:20px;width:130px;height:130px;padding:8px;}
+.s4 .seta{position:absolute;left:150px;top:82px;width:408px;height:6px;background:var(--sec);border-radius:3px;}
+.s4 .ponta{position:absolute;left:556px;top:70px;width:0;height:0;border-left:30px solid var(--sec);border-top:15px solid transparent;border-bottom:15px solid transparent;}
+.s4 .leg-a{position:absolute;left:150px;top:30px;width:430px;text-align:center;font-size:24px;color:var(--sec-hi);}
+.s4 .leg-b{position:absolute;left:150px;top:232px;width:430px;text-align:center;font-size:22px;}
+.s4 .pacote{position:absolute;left:150px;top:76px;width:18px;height:18px;border-radius:50%;background:var(--surface);border:4px solid var(--sec);box-sizing:border-box;opacity:0;}
+.s4.active .pacote{animation:pacote-s4 3.2s ease-in-out 2.1s infinite;}
+@keyframes pacote-s4{0%{transform:translateX(0);opacity:0;}12%{opacity:1;}85%{opacity:1;}100%{transform:translateX(370px);opacity:0;}}
+.s4 .trilho{position:absolute;left:150px;top:190px;width:430px;height:0;border-top:3px dashed var(--line);}
+.s4 .b2 .trilho{border-top-color:var(--accent2);}
+.s4 .pt2{position:absolute;left:150px;top:179px;width:0;height:0;border-right:22px solid var(--accent2);border-top:11px solid transparent;border-bottom:11px solid transparent;}
+.s4 .moeda{position:absolute;left:524px;top:162px;width:56px;height:56px;border-radius:50%;background:var(--surface);border:4px solid var(--accent2);box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:22px;color:var(--accent2-hi);opacity:0;}
+.s4.active .moeda{animation:moeda-s4 1.4s cubic-bezier(.65,0,.35,1) 1.6s both;}
+@keyframes moeda-s4{0%{opacity:0;transform:translateX(0);}15%{opacity:1;transform:translateX(0);}100%{opacity:1;transform:translateX(-344px);}}
+.s4 .fantasma{position:absolute;left:352px;top:162px;width:56px;height:56px;border-radius:50%;border:4px dashed var(--line);box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:22px;color:var(--mut);}
+@media (prefers-reduced-motion:reduce){.s4 .moeda{animation:none !important;opacity:1 !important;transform:translateX(-344px) !important;}
+.s4 .pacote{animation:none !important;opacity:0 !important;}}
+.s5 .svg{position:absolute;left:0;top:0;width:1728px;height:736px;overflow:visible;}
+.s5 .svg .k-traco{stroke-width:6;}
+.s5 .svg .t3{stroke:var(--accent2);}
+.s5 .tick{stroke:var(--line);stroke-width:3;stroke-linecap:round;}
+.s5 .centro{position:absolute;left:294px;top:332px;}
+.s5 .centro-leg{position:absolute;left:210px;top:278px;width:240px;text-align:center;font-family:var(--display);font-weight:700;font-size:30px;line-height:1.2;color:var(--tx);}
+.s5 .tempo{position:absolute;left:0;top:396px;}
+.s5 .m{position:absolute;left:696px;--s:40px;}
+.s5 .m1{top:90px;}
+.s5 .m2{top:348px;}
+.s5 .m3{top:606px;}
+.s5 .m3::after{border-color:var(--accent2);}
+.s5 .lab{position:absolute;left:770px;width:920px;}
+.s5 .lab .k-rotulo{color:var(--sec-hi);}
+.s5 .lab.l3 .k-rotulo{color:var(--accent2-hi);}
+.s5 .hd{font-family:var(--display);font-weight:700;font-size:46px;line-height:1.1;letter-spacing:-.015em;color:var(--tx);margin:4px 0 6px;}
+.s5 .l1{top:44px;}
+.s5 .l2{top:302px;}
+.s5 .l3{top:560px;}
+.s5 .nota{left:770px;top:205px;width:520px;}
+
+/* ===== slides 6, 7, 8, 9 ===== */
+@property --n6{syntax:'<integer>';inherits:false;initial-value:0;}
+.s6 .tt{position:absolute;left:0;top:0;width:1000px;}
+.s6 .conta{--n6:8;counter-reset:n6 var(--n6);}
+.s6 .conta::after{content:counter(n6);}
+.s6.active .conta{animation:conta-s6 1.4s cubic-bezier(.2,.8,.2,1) .4s both;}
+@keyframes conta-s6{from{--n6:0;}to{--n6:8;}}
+.s6 .t1{font-size:36px;width:860px;font-weight:700;}
+.s6 .t2{width:860px;margin-top:16px;font-size:28px;}
+.s6 .a{position:absolute;}
+.s6 .tubo{left:100px;top:60px;width:72px;height:600px;box-sizing:border-box;background:rgba(var(--tx-rgb),.08);border:3px solid var(--line);border-radius:36px 36px 0 0;}
+.s6 .bulbo{left:71px;top:600px;width:130px;height:130px;border-radius:50%;background:var(--sec);}
+.s6 .fill{left:112px;top:180px;width:48px;height:490px;background:var(--sec);border-radius:24px 24px 0 0;transform-origin:bottom center;}
+.s6.active .fill{animation:enche-s6 1.4s cubic-bezier(.3,.7,.2,1) .5s both;}
+@keyframes enche-s6{0%{transform:scaleY(0);}100%{transform:scaleY(1);}}
+.s6 .teto{left:40px;top:180px;width:600px;height:0;border-top:3px dashed var(--accent2);z-index:2;}
+.s6 .pt{position:absolute;}
+.s6 .topo{left:118px;top:166px;--d:1.9s;}
+.s6 .k-pulsa::after{position:absolute;}
+.s6 .leg{left:240px;top:640px;}
+@media (prefers-reduced-motion:reduce){.s6 .fill, .s6 .conta{animation:none !important;transform:none !important;}}
+.s7 .tt{position:absolute;left:0;top:0;width:1380px;}
+.s7 .k-foco-frase{font-size:52px;width:940px;top:190px;}
+.s7 .ap{border-left:8px solid var(--accent2);padding-left:24px;}
+.s7 .a{position:absolute;}
+.s7 .faixa{left:270px;top:180px;width:190px;height:80px;background:var(--accent2);border-radius:6px 6px 0 0;}
+.s7.active .faixa{animation:desce-s7 .7s cubic-bezier(.2,.8,.2,1) 1.9s both;}
+@keyframes desce-s7{0%{transform:translateY(-70px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+.s7 .lg1{left:0;top:716px;width:210px;text-align:center;}
+.s7 .lg2{left:255px;top:716px;width:220px;text-align:center;}
+.s7 .lg3{left:478px;top:196px;width:160px;line-height:1.25;}
+@media (prefers-reduced-motion:reduce){.s7 .faixa{animation:none !important;opacity:1 !important;transform:none !important;}}
+.s8 .k-linha-tit{width:1300px;}
+.s8 .a{position:absolute;}
+.s8 .c{text-align:center;}
+.s8.active .l2{animation-duration:.7s;}
+.s8 .k-pulsa::after{position:absolute;}
+.s8 .t{margin:0;}
+.s9 .k-grade-tit{width:1300px;}
+.s9 .a{position:absolute;}
+.s9 .mz{position:absolute;left:0;top:220px;width:608px;height:680px;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,1fr);gap:10px;}
+.s9 .mz i{display:block;border-radius:8px;transform-origin:bottom center;}
+.s9.active .mz i{animation:bloco-s9 .5s cubic-bezier(.2,.8,.2,1) calc(.05s + var(--i) * .03s) both;}
+@keyframes bloco-s9{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.s9 .c1{background:var(--sec);}
+.s9 .c2{background:var(--accent2);}
+.s9 .c3{background:var(--line);}
+.s9 .c4{background:var(--sec-lo);}
+.s9 .c5{background:var(--accent2-lo);}
+.s9 .pin{position:absolute;left:552px;box-shadow:0 0 0 5px var(--surface);}
+.s9 .p3{background:var(--accent2);color:var(--tx);}
+.s9 .lg{position:absolute;left:616px;width:144px;height:0;border-top:3px dashed var(--accent2);z-index:2;}
+.s9 .cd{position:absolute;left:760px;width:968px;height:216px;display:flex;align-items:center;gap:24px;padding:24px 32px;}
+.s9 .cd p{font-size:28px;flex:1;min-width:0;}
+@media (prefers-reduced-motion:reduce){.s9 .mz i{animation:none !important;transform:none !important;opacity:1 !important;}}
+
+/* ===== slides 10, 11, 12, 13 ===== */
+.s10 .t-item{position:absolute;left:0;width:900px;display:flex;gap:28px;align-items:flex-start;}
+.s10 .t-corpo{width:810px;}
+.s10 .t-data{font-family:var(--display);font-weight:700;font-size:32px;line-height:1.2;color:var(--sec-hi);margin:0 0 6px;}
+.s10 .t-txt{font-size:30px;max-width:800px;}
+.s10 .n3{background:var(--accent2);color:var(--tx);}
+.s10 .cena{position:absolute;left:1000px;top:200px;width:728px;height:736px;}
+.s10 .deg{bottom:46px;width:210px;}
+.s10 .deg1{left:20px;height:200px;background:var(--sec);}
+.s10 .deg2{left:250px;height:380px;background:var(--sec-hi);}
+.s10 .leg{position:absolute;width:210px;text-align:center;}
+.s10 .leg .k-rotulo{font-size:20px;letter-spacing:.08em;}
+.s10 .l1{left:20px;top:420px;}
+.s10 .l2{left:250px;top:240px;}
+.s10 .estado{position:absolute;left:480px;bottom:46px;width:210px;height:380px;box-sizing:border-box;background:var(--accent2-lo);border:3px solid var(--accent2);border-radius:6px 6px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;font-family:var(--display);font-weight:700;font-size:34px;color:var(--tx);transform:translateY(0);}
+.s10.active .estado{animation:encaixa-s10 .7s cubic-bezier(.2,.8,.2,1) 1.4s both;}
+.s10 .bal{left:480px;top:190px;width:240px;}
+.s10 .etq{position:absolute;top:704px;width:210px;text-align:center;}
+@keyframes encaixa-s10{
+  0%{transform:translateY(-140px);opacity:0;}
+  55%{transform:translateY(8px);opacity:1;}
+  75%{transform:translateY(-4px);opacity:1;}
+  100%{transform:translateY(0);opacity:1;}
+}
+.s11 .rot{position:absolute;left:0;top:130px;width:1000px;}
+.s11 .k-foco-frase{top:200px;width:960px;}
+.s11 .k-foco-apoio{top:560px;width:900px;}
+.s11 .cena{position:absolute;left:1080px;top:120px;width:648px;height:816px;}
+.s11 .base{width:190px;bottom:100px;}
+.s11 .bs1{left:20px;height:150px;}
+.s11 .bs2{left:210px;height:300px;}
+.s11 .bs3{left:400px;height:450px;}
+.s11 .b{position:absolute;width:190px;height:150px;box-shadow:inset 0 0 0 2px var(--surface);transform-origin:bottom center;transform:scaleY(1);}
+.s11 .t1{background:var(--sec-lo);}
+.s11 .t2{background:var(--sec);}
+.s11 .t3{background:var(--sec-hi);}
+.s11 .r1{bottom:100px;}
+.s11 .r2{bottom:250px;}
+.s11 .r3{bottom:400px;}
+.s11 .c1{left:20px;}
+.s11 .c2{left:210px;}
+.s11 .c3{left:400px;}
+.s11.active .b{animation:pinta-s11 .5s cubic-bezier(.2,.85,.2,1) var(--d,0s) both;}
+.s11 .teto{position:absolute;left:20px;top:156px;width:570px;border-top:3px dashed var(--accent2);}
+.s11 .teto-leg{position:absolute;left:20px;top:112px;}
+.s11 .fx{position:absolute;top:732px;width:190px;text-align:center;}
+.s11 .bola{position:absolute;left:93px;top:522px;width:44px;height:44px;border-radius:50%;background:var(--accent2);box-shadow:0 0 0 6px rgba(var(--accent2-rgb),.18);z-index:3;transform:translate(380px,-300px);}
+.s11.active .bola{animation:salta-s11 1.4s linear .6s both;}
+@keyframes pinta-s11{
+  0%{transform:scaleY(0);}
+  100%{transform:scaleY(1);}
+}
+@keyframes salta-s11{
+  0%{transform:translate(0,-40px);opacity:0;}
+  14%{transform:translate(0,0);opacity:1;}
+  34%{transform:translate(0,0);opacity:1;}
+  48%{transform:translate(95px,-190px);opacity:1;}
+  60%{transform:translate(190px,-150px);opacity:1;}
+  74%{transform:translate(190px,-150px);opacity:1;}
+  87%{transform:translate(285px,-340px);opacity:1;}
+  100%{transform:translate(380px,-300px);opacity:1;}
+}
+.s12 .ramos{position:absolute;left:0;top:0;overflow:visible;}
+.s12 .k-traco{stroke-width:6;stroke-linejoin:round;}
+.s12 .k-traco.c1{stroke:var(--sec);}
+.s12 .k-traco.c2{stroke:var(--mut);}
+.s12 .k-traco.c3{stroke:var(--accent2);}
+.s12 .raiz{left:774px;top:0;width:180px;}
+.s12 .no-c{top:190px;width:300px;border-width:3px;}
+.s12 .no-1{left:120px;border-color:var(--sec);}
+.s12 .no-2{left:714px;border-color:var(--mut);}
+.s12 .no-3{left:1308px;border-color:var(--accent2);}
+.s12 .col-txt{position:absolute;top:276px;width:500px;font-size:26px;text-align:center;}
+.s12 .x1{left:20px;}
+.s12 .x2{left:614px;}
+.s12 .x3{left:1208px;}
+.s12 .pin{position:absolute;top:524px;width:48px;height:64px;transform-origin:bottom center;}
+.s12 .pin svg{display:block;}
+.s12 .p1{left:246px;--c:var(--sec);}
+.s12 .p2{left:840px;--c:var(--mut);}
+.s12 .p3{left:1434px;--c:var(--accent2);}
+.s12.active .pin{animation:cai-s12 .7s cubic-bezier(.3,.7,.3,1) var(--d,1.5s) both;}
+.s12 .tile{position:absolute;top:600px;width:480px;height:64px;box-sizing:border-box;border:2px solid var(--c);border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:22px;color:var(--tx);white-space:nowrap;}
+.s12 .q1{left:30px;--c:var(--sec);}
+.s12 .q2{left:624px;--c:var(--mut);}
+.s12 .q3{left:1218px;--c:var(--accent2);}
+@keyframes cai-s12{
+  0%{transform:translateY(-90px) scale(1,1);opacity:0;}
+  20%{transform:translateY(-60px) scale(1,1);opacity:1;}
+  60%{transform:translateY(0) scale(1.1,.88);opacity:1;}
+  80%{transform:translateY(-8px) scale(.97,1.04);opacity:1;}
+  100%{transform:translateY(0) scale(1,1);opacity:1;}
+}
+.s13 .rot{position:absolute;left:0;top:130px;width:1000px;}
+.s13 .k-foco-frase{top:200px;width:960px;}
+.s13 .k-foco-apoio{top:560px;width:900px;}
+.s13 .cena{position:absolute;left:1080px;top:120px;width:648px;height:816px;}
+.s13 .sg{position:absolute;left:400px;width:200px;height:180px;background:var(--sec);box-shadow:inset 0 0 0 3px var(--surface);transform-origin:bottom center;transform:translate(0,0) scale(1,1);opacity:1;}
+.s13 .g1{bottom:116px;}
+.s13 .g2{bottom:296px;}
+.s13 .g3{bottom:476px;border-radius:6px 6px 0 0;}
+.s13.active .sg{animation:junta-s13 1.4s cubic-bezier(.45,0,.25,1) var(--d,.3s) both;}
+.s13 .ini{position:absolute;top:714px;width:100px;text-align:center;opacity:0;}
+.s13 .i1{left:10px;}
+.s13 .i2{left:110px;}
+.s13 .i3{left:210px;}
+.s13.active .ini{animation:some-s13 1.4s ease var(--d,.3s) both;}
+.s13 .pago{position:absolute;left:400px;top:160px;width:200px;height:100px;background:var(--accent2);border-radius:6px 6px 0 0;transform-origin:top center;transform:scaleY(1);}
+.s13.active .pago{animation:baixa-s13 .5s cubic-bezier(.2,.85,.2,1) 1.9s both;}
+.s13 .pago-leg{position:absolute;left:250px;top:196px;width:130px;text-align:right;}
+.s13 .tot-leg{position:absolute;left:170px;top:425px;width:210px;text-align:right;}
+.s13 .dentro{position:absolute;left:400px;width:200px;text-align:center;font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.25;color:var(--surface);}
+.s13 .d3{top:287px;}
+.s13 .d2{top:416px;}
+.s13 .d1{top:596px;}
+.s13 .bal{left:355px;top:50px;width:290px;height:90px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;}
+@keyframes junta-s13{
+  0%{transform:translate(var(--x),var(--y)) scale(.4,.5);opacity:0;}
+  12%{transform:translate(var(--x),var(--y)) scale(.4,.5);opacity:1;}
+  45%{transform:translate(var(--x),var(--y)) scale(.4,.5);opacity:1;}
+  100%{transform:translate(0,0) scale(1,1);opacity:1;}
+}
+@keyframes some-s13{
+  0%{opacity:0;}
+  12%{opacity:1;}
+  45%{opacity:1;}
+  65%{opacity:0;}
+  100%{opacity:0;}
+}
+@keyframes baixa-s13{
+  0%{transform:scaleY(0);}
+  100%{transform:scaleY(1);}
+}
+@media (prefers-reduced-motion:reduce){.s10.active .estado, .s11.active .b, .s11.active .bola, .s12.active .pin, .s13.active .sg, .s13.active .ini, .s13.active .pago{animation:none !important;}}
+
+/* ===== slides 14, 15, 16, 17 ===== */
+.s14 .c{position:absolute;top:220px;width:560px;height:700px;}
+.s14 .c1{left:0;}
+.s14 .c2{left:584px;}
+.s14 .c3{left:1168px;}
+.s14 .hd{display:flex;align-items:center;gap:18px;height:56px;margin-bottom:20px;}
+.s14 .hd .k-rotulo{color:var(--sec-hi);}
+.s14 .tx{font-size:26px;line-height:1.45;width:484px;}
+.s14 .sc{position:absolute;left:34px;top:372px;width:488px;height:300px;}
+.s14 .ln{position:absolute;left:0;top:0;}
+.s14 .ln path{stroke:var(--mut);stroke-width:2.5;}
+.s14 .hold{position:absolute;left:8px;top:95px;width:110px;height:110px;border-radius:50%;background:var(--sec);color:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:22px;}
+.s14 .pt{position:absolute;left:226px;}
+.s14 .vb{position:absolute;left:282px;height:34px;box-sizing:border-box;padding-left:12px;border-left:4px solid var(--sec);background:rgba(var(--sec-rgb),.18);font-family:var(--sans);font-weight:700;font-size:22px;line-height:34px;color:var(--tx);}
+.s14 .pa{position:absolute;}
+.s14 .lb{position:absolute;}
+.s14 .rb{position:absolute;left:174px;top:168px;width:140px;height:26px;box-sizing:border-box;background:var(--line);border:2px solid var(--mut);border-radius:6px;}
+.s14 .arco{position:absolute;left:0;top:0;}
+.s14 .arco path.ln2{fill:none;stroke:var(--accent2);stroke-width:4;stroke-dasharray:14 10;stroke-linecap:round;}
+.s14 .arco path.hd2{fill:var(--accent2);stroke:none;}
+.s14 .tc{left:0;top:125px;width:110px;height:110px;padding:8px;}
+.s14 .go{position:absolute;left:118px;top:167px;width:26px;height:26px;border-radius:50%;background:var(--sec);opacity:0;}
+.s14 .bal{left:180px;top:40px;width:308px;}
+.s14.active .pt{animation:abre-s14 .7s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+.s14.active .vb{animation:valor-s14 .6s ease-out var(--d,0s) both;}
+.s14.active .arco{animation:arco-s14 1s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+.s14.active .go{animation:viaja-s14 .9s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+@keyframes abre-s14{0%{transform:translate(-185px,var(--dy,0px));opacity:0;}15%{opacity:1;}100%{transform:translate(0,0);opacity:1;}}
+@keyframes valor-s14{0%{clip-path:inset(0 100% 0 0);}100%{clip-path:inset(0 0 0 0);}}
+@keyframes arco-s14{0%{clip-path:inset(0 100% 0 0);}100%{clip-path:inset(0 0 0 0);}}
+@keyframes viaja-s14{0%{transform:translateX(0);opacity:0;}12%{opacity:1;}85%{transform:translateX(203px);opacity:1;}100%{transform:translateX(203px);opacity:0;}}
+@media (prefers-reduced-motion:reduce){.s14 .pt, .s14 .vb, .s14 .arco, .s14 .go{animation:none !important;}}
+.s15 .pn{position:absolute;top:170px;width:804px;height:650px;}
+.s15 .pa{left:0;}
+.s15 .pb{left:924px;border-color:var(--sec);}
+.s15 .cab{position:absolute;left:32px;top:22px;margin:0;font-family:var(--display);font-weight:700;font-size:36px;line-height:1.1;color:var(--mut);}
+.s15 .pb .cab{color:var(--sec-hi);}
+.s15 .plot{position:absolute;left:32px;top:84px;width:740px;height:230px;}
+.s15 .base{position:absolute;left:32px;top:316px;width:740px;}
+.s15 .d{position:absolute;box-sizing:border-box;}
+.s15 .pa .d{border:2px solid var(--mut);}
+.s15.active .pb .d{animation:agrupa-s15 1.1s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+.s15 .lista{position:absolute;left:32px;top:346px;width:740px;margin:0;padding:0;list-style:none;}
+.s15 .lista li{font-family:var(--sans);font-size:26px;line-height:1.3;color:var(--tx);margin-bottom:14px;white-space:nowrap;}
+.s15 .lista b{font-weight:700;}
+.s15 .pb .lista b{color:var(--sec-hi);}
+.s15 .k-duas-meio{top:560px;}
+.s15 .nota{left:1026px;top:850px;width:600px;}
+@keyframes agrupa-s15{0%{transform:translate(var(--fx),var(--fy));opacity:0;}12%{transform:translate(var(--fx),var(--fy));opacity:1;}100%{transform:translate(0,0);opacity:1;}}
+@media (prefers-reduced-motion:reduce){.s15 .pb .d{animation:none !important;}}
+.s16 .fun{position:absolute;left:0;top:0;}
+.s16 .fw{fill:none;stroke:var(--tx);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:760;stroke-dashoffset:0;}
+.s16.active .fw{animation:desenha-s16 1s ease-out var(--d,0s) both;}
+.s16 .cn{position:absolute;height:52px;box-sizing:border-box;background:var(--surface);border-top:3px solid var(--accent2);border-bottom:3px solid var(--accent2);transform-origin:left center;z-index:1;}
+.s16.active .cn{animation:abre-s16 .5s cubic-bezier(.65,0,.35,1) var(--d,0s) both;}
+.s16 .lc{position:absolute;z-index:2;}
+.s16 .az, .s16 .lr{position:absolute;width:26px;height:26px;border-radius:50%;z-index:3;}
+.s16 .az{background:var(--sec);}
+.s16 .lr{background:var(--accent2);}
+.s16.active .az{animation:caem-s16 .9s cubic-bezier(.5,0,.9,.6) var(--d,0s) both;}
+.s16.active .lr{animation:sale-s16 1s cubic-bezier(.45,.05,.55,.95) var(--d,0s) both;}
+.s16 .cd{position:absolute;left:940px;width:788px;height:180px;padding:24px 32px;border-left:6px solid var(--accent2);}
+.s16 .cd h3{margin:0 0 6px;font-family:var(--display);font-weight:700;font-size:36px;line-height:1.1;color:var(--tx);}
+.s16 .cd p{margin:0;font-family:var(--sans);font-size:26px;line-height:1.35;color:var(--tx);width:716px;}
+.s16 .bal{left:696px;top:190px;width:236px;padding:12px 16px;}
+@keyframes desenha-s16{0%{stroke-dashoffset:760;}100%{stroke-dashoffset:0;}}
+@keyframes abre-s16{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
+@keyframes caem-s16{0%{transform:translateY(var(--sy));opacity:0;}10%{opacity:1;}100%{transform:translateY(0);opacity:1;}}
+@keyframes sale-s16{0%{transform:translate(var(--sx),var(--sy));opacity:0;background:var(--sec);}10%{opacity:1;}50%{transform:translate(var(--mx),0);opacity:1;background:var(--sec);}100%{transform:translate(0,0);opacity:1;background:var(--accent2);}}
+@media (prefers-reduced-motion:reduce){.s16 .fw, .s16 .cn, .s16 .az, .s16 .lr{animation:none !important;}}
+.s17 .c{position:absolute;width:540px;height:290px;padding:28px 32px;}
+.s17 .ix{display:block;font-family:var(--sans);font-weight:700;font-size:20px;line-height:1.3;letter-spacing:.14em;color:var(--sec-hi);margin:0 0 8px;}
+.s17 .ld{margin:0 0 8px;font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;color:var(--tx);}
+.s17 .rs{margin:0;font-family:var(--sans);font-size:26px;line-height:1.4;color:var(--mut);}
+.s17 .halo{position:absolute;left:-24px;top:-28px;width:584px;height:334px;pointer-events:none;overflow:visible;}
+.s17 .halo rect.r1{stroke-width:2.5;}
+.s17 .halo rect.r2{stroke-width:1.5;opacity:.5;}
+.s17 .halo rect.fl{fill:none;stroke:var(--accent2);stroke-width:5;opacity:0;}
+.s17.active .halo rect.fl{animation:flash-s17 .6s ease-out 2.5s both;}
+.s17 .nt{position:absolute;left:1188px;top:580px;width:540px;height:220px;border-left:6px solid var(--accent2);}
+.s17 .nt p{font-size:28px;line-height:1.4;width:468px;}
+.s17 .dg{position:absolute;left:1280px;top:828px;display:flex;align-items:center;gap:14px;z-index:3;}
+.s17.active .dg{animation:desvia-s17 1.5s cubic-bezier(.45,.05,.55,.95) 1.8s both;}
+@keyframes desvia-s17{0%{transform:translate(300px,0);opacity:0;}12%{opacity:1;}50%{transform:translate(-120px,0);opacity:1;}75%{transform:translate(-50px,-34px);opacity:1;}100%{transform:translate(0,0);opacity:1;}}
+@keyframes flash-s17{0%{opacity:0;}30%{opacity:.8;}100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){.s17 .dg, .s17 .halo rect.fl{animation:none !important;}}
+
+/* ===== slides 18, 19, 21, 22 ===== */
+.s18 .sit{position:absolute;left:0;top:182px;width:1100px;}
+.s18 .pal{position:absolute;left:0;top:270px;width:1728px;height:400px;}
+.s18 .herd{left:0;top:100px;width:220px;height:220px;}
+.s18 .n1, .s18 .n2{left:700px;width:440px;height:90px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.s18 .n1{top:20px;}
+.s18 .n2{top:290px;border-color:var(--accent2);}
+.s18 .cam, .s18 .ov{position:absolute;left:0;top:0;width:1728px;height:400px;overflow:visible;pointer-events:none;}
+.s18 .ov{top:270px;}
+.s18 .k-traco{stroke-width:5;}
+.s18 .ah{fill:var(--sec);}
+.s18 .ah2{fill:var(--accent2);}
+.s18 .lar{fill:none;stroke:var(--accent2);stroke-width:5;stroke-linecap:round;stroke-dasharray:600;stroke-dashoffset:0;}
+.s18 .frag{position:absolute;left:0;top:0;width:1728px;height:936px;pointer-events:none;}
+.s18 .res{position:absolute;left:1180px;width:548px;margin:0;font-family:var(--display);font-weight:700;font-size:34px;line-height:1.15;}
+.s18 .ra{top:316px;color:var(--sec-hi);}
+.s18 .rb{top:586px;color:var(--accent2-hi);}
+.s18 .bal{left:367px;top:480px;width:170px;}
+.s18 .card{position:absolute;top:700px;width:840px;padding:22px 32px;}
+.s18 .ca{left:0;}
+.s18 .cb{left:888px;}
+.s18 .card .k-rotulo{margin-bottom:8px;}
+.s18 .frag.on .lar{animation:desenha-s18 .9s ease-out .1s both;}
+.s18 .frag.on .ah2{animation:fade-s18 .4s ease .9s both;}
+.s18 .frag.on .res{animation:fade-s18 .6s ease .3s both;}
+.s18 .frag.on .bal{animation:pop-s18 .5s cubic-bezier(.2,.8,.2,1) .8s both;}
+@keyframes desenha-s18{0%{stroke-dashoffset:600;}100%{stroke-dashoffset:0;}}
+@keyframes fade-s18{0%{opacity:0;}100%{opacity:1;}}
+@keyframes pop-s18{0%{opacity:0;transform:translateY(-12px) scale(.9);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@media (prefers-reduced-motion:reduce){.s18 .lar, .s18 .ah2, .s18 .res, .s18 .bal{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important;}}
+.s19 .tit{position:absolute;left:0;top:0;width:1400px;}
+.s19 .fv{position:absolute;left:1058px;top:258px;width:4px;height:450px;background:var(--sec);border-radius:2px;transform-origin:top center;transform:scaleY(0);z-index:1;}
+.s19.active .fv{animation:desce-s19 1.7s cubic-bezier(.65,0,.35,1) .5s both;}
+@keyframes desce-s19{0%{transform:scaleY(0);}100%{transform:scaleY(1);}}
+.s19 .num{position:absolute;left:0;top:var(--y);}
+.s19 .it{position:absolute;left:88px;top:calc(var(--y) + 8px);width:900px;font-size:28px;line-height:1.4;}
+.s19 .pt{--s:40px;position:absolute;left:1040px;top:calc(var(--y) + 8px);z-index:2;}
+.s19 .bl{left:1116px;top:calc(var(--y) - 3px);width:220px;}
+.s19 .bl::after{left:-12px;bottom:auto;top:50%;margin:-10px 0 0 0;transform:rotate(135deg);}
+.s19 .bl-t{position:absolute;left:1420px;top:646px;width:300px;}
+.s19 .bt{position:absolute;left:1420px;top:690px;width:300px;height:36px;border:2px solid var(--line);background:var(--surface);border-radius:8px;box-sizing:border-box;overflow:hidden;}
+.s19 .bf{position:absolute;left:0;top:0;right:0;bottom:0;background:var(--sec);transform-origin:left center;transform:none;}
+.s19.active .bf{animation:enche-s19 .7s cubic-bezier(.65,0,.35,1) 2s both;}
+@keyframes enche-s19{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
+@media (prefers-reduced-motion:reduce){.s19 .fv, .s19 .bf{animation:none !important;transform:none !important;}}
+.s21 .sub{position:absolute;left:0;top:96px;width:1100px;}
+.s21 .base{left:60px;top:700px;width:1608px;z-index:2;}
+.s21 .b{position:absolute;width:236px;bottom:236px;z-index:1;}
+.s21 .b1{left:170px;height:360px;}
+.s21 .b2{left:746px;height:270px;}
+.s21 .b3{left:1322px;height:240px;background:var(--sec-lo);border:3px solid var(--sec);border-bottom:0;box-sizing:border-box;}
+.s21 .bd{position:absolute;width:64px;height:64px;}
+.s21 .bd svg{display:block;}
+.s21 .bd1{left:256px;top:260px;}
+.s21 .bd2{left:832px;top:350px;}
+.s21 .c-x{fill:var(--accent2);}
+.s21 .c-ok{fill:var(--sec);}
+.s21 .gl{fill:none;stroke:var(--surface);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;}
+.s21 .val{position:absolute;top:712px;width:300px;text-align:center;font-family:var(--display);font-weight:700;font-size:40px;line-height:1.1;margin:0;}
+.s21 .v1{left:138px;}
+.s21 .v2{left:714px;}
+.s21 .v3{left:1290px;}
+.s21 .cap{position:absolute;top:768px;width:540px;text-align:center;font-size:26px;}
+.s21 .c1{left:18px;}
+.s21 .c2{left:594px;}
+.s21 .c3{left:1170px;}
+.s21 .gd{position:absolute;left:982px;top:429px;width:340px;height:0;border-top:3px dashed var(--accent2);z-index:2;}
+.s21 .band{position:absolute;left:1322px;top:430px;width:236px;height:30px;background:rgba(var(--accent2-rgb),.2);border:2px dashed var(--accent2);box-sizing:border-box;z-index:2;}
+.s21 .bal{left:1290px;top:316px;width:300px;}
+.s21 .nota{position:absolute;left:0;top:880px;width:1500px;}
+.s22 .tit{position:absolute;left:0;top:0;width:1400px;}
+.s22 .it{position:absolute;top:170px;width:820px;font-size:28px;line-height:1.4;}
+.s22 .it1{left:0;}
+.s22 .it2{left:908px;}
+.s22 .eixo{left:300px;top:569px;width:1428px;}
+.s22 .folha{position:absolute;width:240px;background:var(--surface);border:2px solid var(--sec);border-top:10px solid var(--sec);border-radius:10px;box-shadow:0 12px 32px rgba(var(--tx-rgb),.1);box-sizing:border-box;padding:20px;}
+.s22 .lc{left:0;top:440px;height:260px;}
+.s22 .lei{left:310px;top:330px;height:200px;}
+.s22 .fn{display:block;font-family:var(--display);font-weight:700;font-size:26px;line-height:1.15;color:var(--tx);margin-bottom:10px;}
+.s22 .fr{letter-spacing:.06em;}
+.s22 .ln{display:block;height:8px;border-radius:4px;background:var(--line);margin-top:14px;}
+.s22.active .lc{animation:pousa-s22 .8s cubic-bezier(.2,.8,.2,1) .6s both;}
+.s22 .v0{position:absolute;left:0;top:716px;width:300px;}
+.s22 .frag{position:absolute;left:0;top:0;width:1728px;height:936px;pointer-events:none;}
+.s22 .mk{--s:36px;position:absolute;left:412px;top:553px;z-index:4;transform:translateX(1210px);}
+.s22 .ml{position:absolute;top:46px;right:0;width:200px;text-align:right;}
+.s22 .seg1{position:absolute;left:430px;top:567px;width:530px;height:8px;background:var(--sec);border-radius:4px;transform-origin:left center;z-index:2;}
+.s22 .seg2{position:absolute;left:960px;top:568px;width:276px;height:0;border-top:6px dashed var(--accent2);transform-origin:left center;z-index:2;}
+.s22 .seg3{position:absolute;left:1236px;top:567px;width:404px;height:8px;background:var(--sec);border-radius:4px;transform-origin:left center;z-index:2;}
+.s22 .dias{position:absolute;left:595px;top:518px;width:200px;text-align:center;font-size:26px;color:var(--sec-hi);}
+.s22 .bar{position:absolute;left:1263px;top:510px;width:14px;height:120px;background:var(--accent2);border-radius:4px;opacity:.18;transform:scaleY(.3);z-index:3;}
+.s22 .bar-t{position:absolute;left:1120px;top:460px;width:300px;text-align:center;font-size:24px;}
+.s22 .fim{position:absolute;left:1528px;top:518px;width:200px;text-align:right;font-size:26px;}
+.s22 .frag.on .lei{animation:pousa-s22 .7s cubic-bezier(.2,.8,.2,1) .1s both;}
+.s22 .frag.on .mk{animation:corre-s22 3.2s linear .7s both;}
+.s22 .frag.on .seg1{animation:escala-s22 1s cubic-bezier(.65,0,.35,1) .7s both;}
+.s22 .frag.on .seg2{animation:escala-s22 .6s ease-in-out 1.7s both;}
+.s22 .frag.on .seg3{animation:escala-s22 .8s cubic-bezier(.65,0,.35,1) 3.1s both;}
+.s22 .frag.on .dias{animation:fade-s22 .5s ease 1s both;}
+.s22 .frag.on .bar{animation:barreira-s22 3.1s ease .3s both;}
+.s22 .frag.on .bar-t{animation:fade-s22 .5s ease .5s both;}
+.s22 .frag.on .fim{animation:fade-s22 .5s ease 3.9s both;}
+@keyframes pousa-s22{0%{opacity:0;transform:translateY(-80px) rotate(-5deg);}60%{opacity:1;transform:translateY(6px) rotate(1deg);}100%{opacity:1;transform:translateY(0) rotate(0);}}
+@keyframes corre-s22{
+  0%{transform:translateX(0);animation-timing-function:ease-in-out;}
+  31%{transform:translateX(530px);animation-timing-function:ease-in-out;}
+  50%{transform:translateX(806px);}
+  75%{transform:translateX(806px);animation-timing-function:ease-in-out;}
+  100%{transform:translateX(1210px);}
+}
+@keyframes escala-s22{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
+@keyframes fade-s22{0%{opacity:0;}100%{opacity:1;}}
+@keyframes barreira-s22{
+  0%{opacity:0;transform:scaleY(.2);}
+  8%{opacity:1;transform:scaleY(1);}
+  80%{opacity:1;transform:scaleY(1);}
+  100%{opacity:.18;transform:scaleY(.3);}
+}
+@media (prefers-reduced-motion:reduce){.s22 .lc, .s22 .lei, .s22 .mk, .s22 .seg1, .s22 .seg2, .s22 .seg3, .s22 .dias, .s22 .bar, .s22 .bar-t, .s22 .fim{animation:none !important;}}
+
+/* ===== slide 20 ===== */
+.s20 .tit{position:absolute;left:0;top:0;width:1728px;}
+.s20 .sub{position:absolute;left:0;top:112px;width:1100px;}
+.s20 .palco{position:absolute;left:0;top:260px;width:1728px;height:676px;}
+.s20 .col{position:absolute;top:30px;height:130px;text-align:center;}
+.s20 .aliq{font-family:var(--display);font-weight:700;font-size:56px;line-height:1.1;color:var(--sec-hi);margin:0;}
+.s20 .imp{font-family:var(--sans);font-weight:700;font-size:34px;line-height:1.3;color:var(--tx);margin:0;}
+.s20 .gu{position:absolute;top:168px;height:58px;width:0;border-left:2px dashed var(--line);}
+.s20 .seg{position:absolute;top:230px;height:90px;box-sizing:border-box;border:2px solid var(--sec);border-right:4px solid var(--bg);}
+.s20 .seg1{left:64px;width:200px;background:var(--sec-lo);border-radius:8px 0 0 8px;}
+.s20 .seg2{left:264px;width:800px;background:var(--sec);}
+.s20 .seg3{left:1064px;width:600px;background:var(--sec-hi);border-radius:0 8px 8px 0;border-right-color:var(--sec-hi);}
+.s20 .val{position:absolute;top:336px;text-align:center;}
+.s20 .tot{position:absolute;left:64px;top:410px;width:1600px;height:3px;background:var(--mut);border-radius:2px;}
+.s20 .tk{position:absolute;top:400px;width:3px;height:23px;background:var(--mut);}
+.s20 .totl{position:absolute;left:664px;top:428px;width:400px;text-align:center;}
+.s20 .res-r{position:absolute;left:64px;top:508px;width:500px;}
+.s20 .res-n{position:absolute;left:64px;top:536px;width:760px;font-family:var(--display);font-weight:700;font-size:130px;line-height:1.05;letter-spacing:-.03em;color:var(--sec-hi);margin:0;white-space:nowrap;}
+.s20 .bal{left:860px;top:580px;width:300px;}
+.s20 .bal::after{left:-12px;bottom:auto;top:50%;margin-left:0;margin-top:-10px;transform:rotate(135deg);}
+.s20 .ap{position:absolute;left:1240px;top:574px;width:424px;}
+.s20 .soma{position:absolute;left:64px;top:660px;width:1000px;}
+.s20 .slide-dummy{opacity:1;}
+.slide.active.s20 .res-n{animation:ganha-s20 .7s cubic-bezier(.2,.8,.2,1) 2.6s both;}
+.s20 .res-n{opacity:0;transform:translateY(16px);}
+@keyframes ganha-s20{0%{opacity:0;transform:translateY(16px);}100%{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){.s20 .res-n{animation:none !important;opacity:1 !important;transform:none !important;}}
+
+/* ===== slides 23, 24, 25 ===== */
+.s23 .mapa{position:absolute;left:0;top:220px;width:800px;height:716px;}
+.s23 .t{position:absolute;width:150px;height:120px;box-sizing:border-box;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:10px 14px;font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.2;color:var(--tx);}
+.s23 .t .sg{position:relative;z-index:1;}
+.s23 .t--azul{border-style:solid;border-color:var(--sec);}
+.s23 .t .fill{position:absolute;inset:-2px;border-radius:12px;background:var(--sec-lo);border:2px solid var(--sec);z-index:0;opacity:1;}
+.s23.active .t .fill{animation:acende-s23 .7s ease var(--d2,1.2s) both;}
+@keyframes acende-s23{0%{opacity:0;}100%{opacity:1;}}
+.s23 .t--cinza{border-style:solid;border-color:var(--line);background:rgba(var(--tx-rgb),.08);}
+.s23 .t .pct{position:absolute;left:14px;bottom:8px;font-family:var(--display);font-weight:700;font-size:44px;line-height:1;color:var(--tx);z-index:1;}
+.s23 .t .st i{position:absolute;bottom:12px;width:20px;background:var(--sec);border-radius:4px 4px 0 0;z-index:1;}
+.s23 .t .st i:nth-child(1){right:64px;height:20px;}
+.s23 .t .st i:nth-child(2){right:38px;height:38px;}
+.s23 .t .st i:nth-child(3){right:12px;height:56px;}
+.s23 .t .q{position:absolute;right:14px;bottom:6px;font-family:var(--display);font-weight:700;font-size:56px;line-height:1;color:var(--accent2-hi);}
+.s23.active .t .q{animation:pulsa-s23 2.2s ease-in-out var(--d,1.6s) infinite;}
+@keyframes pulsa-s23{0%{transform:scale(1);opacity:.7;}50%{transform:scale(1.2);opacity:1;}100%{transform:scale(1);opacity:.7;}}
+.s23 .relogio{position:absolute;right:10px;top:8px;width:36px;height:36px;z-index:1;}
+.s23 .mao{transform-origin:18px 18px;transform:rotate(0deg);}
+.s23.active .mao{animation:gira-s23 6s linear 1.4s infinite;}
+@keyframes gira-s23{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.s23 .tram{position:absolute;left:20px;top:152px;width:170px;text-align:right;font-family:var(--sans);font-weight:700;font-size:20px;line-height:1.25;color:var(--accent2-hi);}
+.s23 .leg{position:absolute;left:372px;top:288px;width:316px;}
+.s23 .leg .lg{display:flex;align-items:center;gap:14px;margin-top:16px;font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.25;color:var(--tx);}
+.s23 .leg .qd{width:22px;height:22px;border-radius:5px;flex:none;box-sizing:border-box;}
+.s23 .qd--a{background:var(--sec-lo);border:3px solid var(--sec);}
+.s23 .qd--b{background:var(--line);}
+.s23 .qd--c{border:3px dashed var(--accent2);background:var(--surface);}
+.s23 .lista{position:absolute;left:880px;top:220px;width:848px;}
+.s23 .it{height:164px;box-sizing:border-box;margin-bottom:16px;display:flex;align-items:center;padding:0 28px;background:var(--surface);border:2px solid var(--line);border-left:8px solid var(--sec);border-radius:12px;}
+.s23 .it--b{border-left-color:var(--mut);}
+.s23 .it--c{border-left-color:var(--accent2);}
+.s23 .it p{margin:0;font-family:var(--sans);font-weight:400;font-size:27px;line-height:1.35;color:var(--tx);}
+.s23 .it strong{font-weight:700;}
+.s24 .pre{position:absolute;left:0;top:112px;width:900px;}
+.s24 .resp{position:absolute;left:0;top:360px;width:1120px;border-left:8px solid var(--accent2);}
+.s24 .resp .carimbo{font-family:var(--display);font-weight:700;font-size:96px;line-height:1;letter-spacing:-.02em;color:var(--accent2-hi);margin:8px 0 14px;display:block;transform:none;opacity:1;}
+.s24.active .frag.on .carimbo{animation:sela-s24 .55s cubic-bezier(.2,.8,.2,1) both;}
+@keyframes sela-s24{0%{transform:scale(1.5) rotate(-8deg);opacity:0;}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+.s24 .resp .k-texto{font-size:32px;width:1050px;}
+.s24 .exc{position:absolute;left:0;top:730px;width:1120px;border-left:8px solid var(--sec);}
+.s24 .exc .k-texto{font-size:32px;width:1050px;}
+.s24 .quest{position:absolute;left:1260px;top:340px;width:380px;height:380px;border-radius:50%;border:4px dashed var(--accent2);box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:260px;line-height:1;color:var(--accent2-hi);background:var(--surface);}
+.s24 .quest::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--accent2);opacity:0;}
+.s24.active .quest::after{animation:anel-s24 2.6s ease-out 1.2s infinite;}
+@keyframes anel-s24{0%{transform:scale(1);opacity:.55;}100%{transform:scale(1.25);opacity:0;}}
+.s24 .quest-leg{position:absolute;left:1260px;top:740px;width:380px;text-align:center;}
+.s25 .k-recap-lista{top:230px;}
+.s25 .cd{padding:32px 36px;}
+.s25 .topo{display:flex;align-items:center;justify-content:space-between;height:130px;}
+.s25 .topo svg{width:160px;height:130px;overflow:visible;}
+.s25 .cd h3{font-family:var(--display);font-weight:700;font-size:40px;line-height:1.1;letter-spacing:-.01em;color:var(--tx);margin:22px 0 14px;}
+.s25 .cd p{margin:0;font-family:var(--sans);font-weight:400;font-size:27px;line-height:1.4;color:var(--tx);}
+.s25 .ic-or{fill:var(--accent2);stroke:none;}
+.s25 .ic-bg{fill:none;stroke:var(--line);stroke-width:2;}
+.slide.s25.active .k-traco{animation-duration:.8s;}
+@media (prefers-reduced-motion:reduce){.s23 .t .q, .s23 .mao, .s23 .t .fill, .s24 .quest::after, .s24 .resp .carimbo{animation:none !important;}
+.s24 .quest::after{opacity:0 !important;}}
+
+/* ===== slide 26 ===== */
+.s26 .marca-s26{z-index:2}
+.s26 .tit-s26{position:absolute;left:0;top:190px;width:900px}
+.s26 .tit-s26 .k-titulo-abertura{font-size:150px}
+.s26 .perg-s26{position:absolute;left:0;top:380px;width:900px}
+.s26 .chama-s26{position:absolute;left:0;top:500px;width:840px;font-weight:700}
+.s26 .apoio-s26{position:absolute;left:0;top:610px;width:820px}
+.s26 .rot-s26{position:absolute;left:0;top:130px;width:600px}
+.s26 .mapa-s26{position:absolute;left:1024px;top:190px;width:704px;height:584px}
+.s26 .blk{position:absolute;width:104px;height:104px;box-sizing:border-box;border-radius:12px;border:3px solid var(--sec);background:rgba(var(--sec-rgb),.14);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:30px;color:var(--sec-hi);left:calc(var(--c)*120px);top:calc(var(--r)*120px)}
+.s26 .blk i{font-style:normal;display:block}
+.s26 .blk--alvo{border-color:var(--accent2);background:rgba(var(--accent2-rgb),.16);color:var(--accent2-hi);font-size:44px}
+.s26 .anel-s26{position:absolute;left:calc(3*120px - 6px);top:-6px;width:116px;height:116px;border-radius:16px;border:3px solid var(--accent2);opacity:0;box-sizing:border-box}
+.s26 .dot-s26{position:absolute;left:38px;top:calc(var(--r)*120px + 38px);width:28px;height:28px;border-radius:50%;background:var(--sec);box-shadow:0 0 0 6px rgba(var(--sec-rgb),.2);opacity:0;z-index:2}
+.s26 .leg-s26{position:absolute;left:1024px;top:802px;width:704px}
+.s26 .bal-s26{left:1216px;top:62px;width:440px}
+.slide.active.s26 .blk{animation:blk-s26 .45s ease-out calc(.3s + var(--r)*.18s + var(--c)*.11s) both}
+.slide.active.s26 .blk--alvo{animation-name:alvo-s26}
+.slide.active.s26 .blk i{animation:ok-s26 .4s cubic-bezier(.2,.8,.2,1) calc(.38s + var(--r)*.18s + var(--c)*.11s) both}
+.slide.active.s26 .dot-s26{animation:dot-s26 .7s linear calc(.3s + var(--r)*.18s) both}
+.slide.active.s26 .anel-s26{animation:anel-s26 2.4s ease-out 2.6s infinite}
+@keyframes blk-s26{
+0%{background:var(--surface);border-color:var(--line);transform:scale(1)}
+40%{background:var(--surface);border-color:var(--sec);transform:scale(1.08)}
+100%{background:rgba(var(--sec-rgb),.14);border-color:var(--sec);transform:scale(1)}}
+@keyframes alvo-s26{
+0%{background:var(--surface);border-color:var(--line);transform:scale(1)}
+40%{background:var(--surface);border-color:var(--accent2);transform:scale(1.08)}
+100%{background:rgba(var(--accent2-rgb),.16);border-color:var(--accent2);transform:scale(1)}}
+@keyframes ok-s26{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+@keyframes dot-s26{
+0%{transform:translateX(0);opacity:0}
+6%{transform:translateX(30px);opacity:1}
+92%{transform:translateX(570px);opacity:1}
+100%{transform:translateX(600px);opacity:0}}
+@keyframes anel-s26{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.5);opacity:0}}
+@media (prefers-reduced-motion:reduce){.slide.active.s26 .blk, .slide.active.s26 .blk i, .slide.active.s26 .dot-s26, .slide.active.s26 .anel-s26{animation:none !important}
+.s26 .dot-s26{opacity:0 !important}
+.s26 .anel-s26{opacity:0 !important}}
+
+/* correções da conferência automática */
+.s22 .mk .ml{top:50px;left:-82px;right:auto;width:200px;text-align:center;color:var(--tx);white-space:nowrap;letter-spacing:0;}
+
+/* correções da conferência automática */
+.s22 .mkw{position:absolute;left:412px;top:553px;width:36px;height:36px;z-index:4;transform:translateX(1210px);}
+.s22 .frag.on .mkw{animation:corre-s22 3.2s linear .7s both;}
+.s22 .mkw .k-ponto{--s:36px;}
+.s22 .mkw .ml{position:absolute;top:48px;left:-82px;right:auto;width:200px;text-align:center;color:var(--tx);background:var(--bg);border-radius:6px;padding:2px 0;white-space:nowrap;letter-spacing:0;}
+@media (prefers-reduced-motion:reduce){.s22 .mkw{animation:none !important;}}
+
+/* correções da conferência automática */
+.s2 .parada{top:428px;width:80px;height:80px;font-size:40px;box-shadow:0 0 0 10px rgba(var(--sec-rgb),.16);}.s2 .linha{left:40px;top:465px;width:1402px;}.s2 .k-roteiro-lista{top:550px;}.s2 .item{font-size:30px;max-width:326px;}.s4 .cena{top:340px;height:300px;}.s4 .leg-b{left:125px;width:480px;font-size:24px;top:240px;}.s4 .fantasma{border-color:var(--mut);color:var(--tx);}.s4 .fantasma::after{content:"×";position:absolute;inset:-14px;display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:84px;line-height:1;color:var(--accent2);}.s6 .k-ng-txt{top:440px;}.s6 .teto{left:88px;top:140px;width:560px;}.s6 .tk{font-size:22px;width:62px;text-align:right;left:12px;}.s12 .col-txt{text-align:left;top:276px;}.s12 .pin{top:590px;}.s16 .barra{position:absolute;left:0;top:240px;width:60px;height:480px;background:var(--sec);border-radius:12px;z-index:1;}.s16 .lc{font-size:24px;}.s16 .fl{z-index:4;}.s16 .grupo{position:absolute;left:0;top:780px;width:320px;height:120px;background:var(--surface);border:2px solid var(--sec-lo);border-radius:12px;z-index:0;}.s16 .bal{left:590px;top:196px;width:236px;}.s19 .bl4{width:270px;}.s19 .cmp-t{position:absolute;left:1410px;top:230px;width:318px;font-size:24px;}.s19 .cb{position:absolute;width:100px;border-radius:8px 8px 0 0;}.s19 .cb1{left:1430px;top:300px;height:300px;background:var(--sec);}.s19 .cb2{left:1590px;top:594px;height:6px;background:var(--accent2);}.s19 .cbase{position:absolute;left:1410px;top:600px;width:300px;height:3px;background:var(--tx);}.s19 .cl{position:absolute;top:618px;font-size:24px;text-align:center;}.s19 .cl1{left:1410px;width:140px;}.s19 .cl2{left:1560px;width:160px;}.s22 .it{top:700px;font-size:30px;border-top:4px solid var(--sec);padding-top:16px;}.s22 .lc{left:0;top:360px;height:170px;width:230px;}.s22 .lc .xis{position:absolute;right:-18px;bottom:-18px;width:52px;height:52px;border-radius:50%;background:var(--accent2);color:var(--surface);font-family:var(--sans);font-weight:700;font-size:28px;display:flex;align-items:center;justify-content:center;}.s22 .v0{left:0;top:566px;width:230px;font-size:26px;text-align:center;}.s22 .conn{position:absolute;left:428px;top:530px;width:4px;height:40px;background:var(--sec);}.s22 .tk22{position:absolute;left:958px;top:545px;width:4px;height:50px;background:var(--tx);}.s22 .tk-t,.s22 .pub-t{position:absolute;top:606px;width:200px;text-align:center;font-size:24px;}.s22 .tk-t{left:860px;}.s22 .pub-t{left:330px;}.s22 .dias{top:512px;font-size:28px;}.s22 .bar{left:1229px;top:505px;width:6px;height:130px;opacity:1;transform:none;}.s22 .bar-t{left:1066px;top:462px;width:340px;font-size:26px;}.s22 .fim{left:1338px;width:200px;text-align:center;top:518px;}.s22 .frag.on .bar{animation:barreira2-s22 3.1s ease .3s both;}.s22 .frag.on .conn{animation:fade-s22 .6s ease .7s both;}.s22 .frag.on .tk22,.s22 .frag.on .tk-t{animation:fade-s22 .5s ease 1.6s both;}.s22 .frag.on .pub-t{animation:fade-s22 .5s ease .6s both;}@keyframes barreira2-s22{0%{opacity:0;transform:scaleY(.2);}8%{opacity:1;transform:scaleY(1);}100%{opacity:1;transform:scaleY(1);}}.s23 .t{width:180px;height:130px;font-size:28px;}.s23 .t .pct{font-size:52px;}.s23 .tram{left:392px;top:190px;width:300px;text-align:left;font-size:22px;}.s23 .leg{left:0;top:620px;width:800px;display:flex;flex-wrap:wrap;gap:12px 28px;}.s23 .leg .lg{margin-top:0;font-size:24px;}
+</style>
+</head>
+<body>
+
+<div id="nojs">
+  <div class="bx">
+    <h2>Abra esta página no navegador</h2>
+    <p>Esta prévia não carrega a apresentação. Toque no ícone de compartilhar e escolha <b>Abrir no navegador</b> (Chrome ou Safari) para ver e passar os slides.</p>
+  </div>
+</div>
+
+<div id="viewport">
+  <div id="stage">
+
+    <!-- ============== OS SLIDES VÃO AQUI ============== -->
+    <!-- Um <section class="slide" data-title="..."> por slide, na ordem. O data-title é anunciado ao leitor de tela:
+         curto e real. -->
+
+    <section class="slide s1" data-title="ITCMD: herança e doação depois da reforma">
+  <div class="k-textura"></div>
+
+  <div class="k-marca rv k-cima" style="--d:.1s">Herança · Doação</div>
+
+  <div class="deco" aria-hidden="true">
+    <i class="k-flutua" style="--s:28px;--c:var(--accent-lo);left:1560px;top:190px;--d:0s"></i>
+    <i class="k-flutua" style="--s:56px;--c:var(--accent-lo);left:1650px;top:250px;--d:1s"></i>
+    <i class="k-flutua" style="--s:20px;--c:var(--accent2-lo);left:1500px;top:320px;--d:2s"></i>
+    <i class="k-flutua" style="--s:40px;--c:var(--accent-lo);left:1740px;top:370px;--d:.5s"></i>
+    <i class="k-flutua" style="--s:24px;--c:var(--accent2-lo);left:1620px;top:430px;--d:1.5s"></i>
+    <i class="k-flutua" style="--s:64px;--c:var(--accent-lo);left:1500px;top:440px;--d:2.5s"></i>
+    <i class="k-flutua" style="--s:18px;--c:var(--accent-lo);left:1770px;top:230px;--d:3s"></i>
+  </div>
+
+  <h1 class="tit k-titulo-abertura rv k-mascara" style="--d:.2s">
+    <span class="sigla">ITCMD:</span>
+    <span class="tit2">o imposto que quase todo mundo vai encontrar</span>
+  </h1>
+  <p class="sub k-texto rv" style="--d:.6s">Herança e doação depois da EC 132/2023 e da LC 227/2026</p>
+
+  <div class="cena" aria-label="Pontos de dados saem de quem transmite e atravessam o eixo até quem recebe; balão: sem pagamento">
+    <div class="k-circulo circ circ-e rv k-esq" style="--d:.8s">Quem transmite</div>
+    <div class="anel"></div>
+    <div class="k-circulo circ circ-d rv k-dir" style="--d:.9s">Quem recebe</div>
+
+    <div class="k-eixo k-eixo-x eixo" style="--d:.7s"></div>
+    <div class="seta"></div>
+
+    <div class="pt" style="--x:700px;--s:80px;--from:-484px;--d:.8s">
+      <span class="k-ponto" style="--s:80px"></span>
+      <span class="k-leg">imóvel</span>
+    </div>
+    <div class="pt" style="--x:900px;--s:56px;--from:-684px;--d:1s">
+      <span class="k-ponto" style="--s:56px"></span>
+      <span class="k-leg">dinheiro</span>
+    </div>
+    <div class="pt" style="--x:1200px;--s:48px;--from:-984px;--d:1.2s">
+      <span class="k-ponto" style="--s:48px"></span>
+      <span class="k-leg">veículo</span>
+    </div>
+    <div class="pt" style="--x:1400px;--s:68px;--from:-1184px;--d:1.4s">
+      <span class="k-ponto" style="--s:68px"></span>
+      <span class="k-leg">quotas</span>
+    </div>
+
+    <div class="k-balao bal">sem pagamento</div>
+    <div class="k-guia guia"></div>
+    <div class="alvo"></div>
+  </div>
+</section>
+
+<section class="slide s2" data-title="Roteiro da apresentação"><div class="k-textura"></div><div class="k-marca">Roteiro</div><div class="k-roteiro"><h1 class="k-titulo k-roteiro-tit rv k-mascara">O caminho desta apresentação</h1><div class="k-eixo k-eixo-x linha"></div><div class="k-num parada" style="left:0;--d:.5s">1</div><div class="k-num parada" style="left:350px;--d:.9s">2</div><div class="k-num parada" style="left:701px;--d:1.3s">3</div><div class="k-num parada" style="left:1051px;--d:1.7s">4</div><div class="k-num parada" style="left:1402px;--d:2.1s">5</div><div class="k-balao k-pop" style="left:1270px;top:352px;width:340px;--d:2.7s">exemplo vem depois</div><div class="k-roteiro-lista"><p class="item k-fade" style="--d:.6s">O que é e como se cobra</p><p class="item k-fade" style="--d:1s">Como era antes da reforma</p><p class="item k-fade" style="--d:1.4s">O que mudou: sete mudanças</p><p class="item k-fade" style="--d:1.8s">Exceções: imunidade, não incidência e isenção</p><p class="item k-fade" style="--d:2.2s">Cálculo, situação atual e conclusão</p></div></div></section>
+
+<section class="slide s3" data-title="O ITCMD em cinco pontos">
+  <div class="k-textura k-textura--leve"></div>
+  <div class="k-marca">Parte 1 · O que é</div>
+  <div class="k-grade">
+    <h1 class="k-titulo k-grade-tit rv k-mascara">O ITCMD em cinco pontos</h1>
+    <div class="k-grade-corpo">
+      <article class="k-cartao k-cartao--azul c1 rv k-zoom" style="--d:.1s">
+        <div class="topo">
+          <svg class="ico" viewBox="0 0 56 56" aria-hidden="true"><path d="M8 26 L28 10 L48 26 M12 26 V46 M24 26 V46 M32 26 V46 M44 26 V46 M8 48 H48"/></svg>
+          <span class="k-rotulo">01</span>
+        </div>
+        <p class="h">Cobrado pelos estados e pelo DF</p>
+      </article>
+      <article class="k-cartao k-cartao--azul c2 rv k-zoom" style="--d:.35s">
+        <div class="topo">
+          <svg class="ico" viewBox="0 0 56 56" aria-hidden="true"><path d="M18 48 V24 a10 10 0 0 1 20 0 V48 Z M12 48 H44"/></svg>
+          <span class="k-rotulo">02</span>
+        </div>
+        <p class="h">Causa mortis</p>
+        <p class="d">Herança, por morte</p>
+      </article>
+      <article class="k-cartao k-cartao--azul c3 rv k-zoom" style="--d:.6s">
+        <div class="topo">
+          <svg class="ico" viewBox="0 0 56 56" aria-hidden="true"><rect x="10" y="26" width="36" height="22"/><rect x="8" y="18" width="40" height="8"/><path d="M28 18 V48 M28 18 C20 6 12 14 28 18 C44 14 36 6 28 18"/></svg>
+          <span class="k-rotulo">03</span>
+        </div>
+        <p class="h">Doação</p>
+        <p class="d">Transferência gratuita em vida</p>
+      </article>
+      <article class="k-cartao k-cartao--azul c4 rv k-zoom" style="--d:.85s">
+        <div class="topo">
+          <svg class="ico" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="18" r="8"/><path d="M12 48 C12 34 44 34 44 48"/></svg>
+          <span class="k-rotulo">04</span>
+        </div>
+        <p class="h">Quem paga</p>
+        <p class="d"><span class="k-laranja" style="font-weight:700">Quem recebe</span> (herdeiro, legatário ou donatário)</p>
+      </article>
+      <article class="k-cartao k-cartao--azul c5 rv k-zoom" style="--d:1.1s">
+        <div class="esq">
+          <div class="topo" style="justify-content:flex-start;gap:24px">
+            <svg class="ico" viewBox="0 0 56 56" aria-hidden="true"><path d="M10 46 V30 M22 46 V18 M34 46 V26 M46 46 V12" style="stroke-width:6"/></svg>
+            <span class="k-rotulo">05</span>
+          </div>
+          <p class="h">Alcança qualquer bem com valor econômico</p>
+        </div>
+        <div class="pic">
+          <div class="pi"><span class="k-ponto d1" style="--d:1.5s"></span><span class="k-leg k-fade" style="--d:1.9s">imóveis</span></div>
+          <div class="pi"><span class="k-ponto d2" style="--d:1.7s"></span><span class="k-leg k-fade" style="--d:2.1s">dinheiro</span></div>
+          <div class="pi"><span class="k-ponto d3" style="--d:1.9s"></span><span class="k-leg k-fade" style="--d:2.3s">veículos</span></div>
+          <div class="pi"><span class="k-ponto d4" style="--d:2.1s"></span><span class="k-leg k-fade" style="--d:2.5s">aplicações</span></div>
+          <div class="pi"><span class="k-ponto d5" style="--d:2.3s"></span><span class="k-leg k-fade" style="--d:2.7s">quotas</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="slide s4" data-title="ITCMD x ITBI"><div class="k-textura"></div><div class="k-marca">Parte 1 · O que é</div><div class="k-duas"><h1 class="k-titulo k-duas-tit rv k-mascara">Não confunda: ITCMD × ITBI</h1><div class="k-duas-a"><article class="k-cartao k-cartao--azul bloco b1 rv k-esq" style="--d:.2s"><p class="nome">ITCMD</p><span class="chip k-pop" style="--d:1s">estado</span><p class="k-texto txt">Estadual, transmissão gratuita (herança e doação)</p><div class="cena"><div class="k-circulo k-pop" style="left:0;--d:.6s">bem</div><div class="k-circulo k-pop" style="left:602px;--d:.7s">quem recebe</div><span class="k-leg leg-a k-fade" style="--d:1.2s">transmissão gratuita</span><div class="seta k-eixo-x" style="--d:.9s"></div><div class="ponta k-fade" style="--d:1.8s"></div><div class="pacote"></div><div class="trilho k-fade" style="--d:1.6s"></div><div class="fantasma k-fade" style="--d:1.6s">R$</div><span class="k-leg leg-b k-fade" style="--d:2s">sem pagamento</span></div></article></div><div class="k-duas-meio rv" style="--d:.8s" aria-hidden="true">×</div><div class="k-duas-b"><article class="k-cartao k-cartao--alerta bloco b2 rv k-dir" style="--d:.4s"><p class="nome">ITBI</p><span class="chip k-pop" style="--d:1.2s">município</span><p class="k-texto txt">Municipal, transmissão onerosa de imóveis (compra e venda)</p><div class="cena"><div class="k-circulo k-pop" style="left:0;--d:.8s">imóvel</div><div class="k-circulo k-pop" style="left:602px;--d:.9s">quem compra</div><span class="k-leg leg-a k-fade" style="--d:1.4s">transmissão onerosa</span><div class="seta k-eixo-x" style="--d:1.1s"></div><div class="ponta k-fade" style="--d:2s"></div><div class="pacote"></div><div class="trilho k-fade" style="--d:1.5s"></div><div class="pt2 k-fade" style="--d:1.5s"></div><div class="moeda">R$</div><span class="k-leg leg-b k-fade" style="--d:2.4s">o preço vai no sentido contrário</span></div></article></div></div></section>
+
+<section class="slide s5" data-title="Quando o imposto nasce">
+  <div class="k-textura k-textura--leve"></div>
+  <div class="k-marca">Parte 1 · O que é</div>
+  <div class="k-diagrama">
+    <h1 class="k-titulo k-diagrama-tit rv k-mascara">Quando o imposto nasce</h1>
+    <div class="k-diagrama-palco">
+      <svg class="svg" viewBox="0 0 1728 736" aria-hidden="true">
+        <g class="k-fade" style="--d:.2s">
+          <path class="tick" d="M50 352 V384 M130 352 V384 M210 352 V384"/>
+        </g>
+        <path class="k-traco" d="M0 368 H294" style="--len:300;--d:.2s;animation-duration:.5s"/>
+        <path class="k-traco" d="M330 368 C480 368 470 110 640 110 H696" style="--len:580;--d:1s;animation-duration:.55s"/>
+        <path class="k-traco" d="M330 368 H696" style="--len:370;--d:1.5s;animation-duration:.55s"/>
+        <path class="k-traco t3" d="M330 368 C480 368 470 626 640 626 H696" style="--len:580;--d:2s;animation-duration:.55s"/>
+      </svg>
+      <span class="k-rotulo tempo k-fade" style="--d:.3s">Tempo →</span>
+      <span class="k-ponto centro k-pop" style="--s:72px;--d:.7s"></span>
+      <span class="centro-leg k-fade" style="--d:.9s">transmissão</span>
+
+      <span class="k-ponto k-pulsa m m1 k-pop" style="--d:1.5s"></span>
+      <div class="lab l1 k-fade" style="--d:1.6s">
+        <p class="k-rotulo">Uma data</p>
+        <p class="hd">Herança</p>
+        <p class="k-texto">Na data da morte</p>
+      </div>
+      <div class="k-balao k-balao--cima nota k-pop" style="--d:2.7s">não é a abertura do inventário</div>
+
+      <span class="k-ponto k-pulsa m m2 k-pop" style="--d:2s"></span>
+      <div class="lab l2 k-fade" style="--d:2.1s">
+        <p class="k-rotulo">Um ato</p>
+        <p class="hd">Doação</p>
+        <p class="k-texto">Quando ela é feita</p>
+      </div>
+
+      <span class="k-ponto k-ponto--alerta k-pulsa m m3 k-pop" style="--d:2.5s"></span>
+      <div class="lab l3 k-fade" style="--d:2.6s">
+        <p class="k-rotulo">Uma partilha</p>
+        <p class="hd">Divórcio</p>
+        <p class="k-texto">Sobre o que exceder a meação de cada um</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s6" data-title="O teto da alíquota"><div class="k-textura"></div><div class="k-marca">Alíquota</div><div class="k-numero-grande"><h2 class="k-titulo tt rv k-mascara" style="--d:.1s">O teto da alíquota</h2><div class="k-ng-num"><p class="k-numero k-azul"><span class="conta"></span>%</p></div><div class="k-ng-txt rv" style="--d:.8s"><p class="k-texto t1">Teto fixado pela Resolução 9/1992 do Senado Federal</p><p class="k-apoio t2">A alíquota em si é definida pela lei de cada estado</p></div><div class="k-ng-cena"><div class="a k-cresce" style="left:88px;top:140px;width:3px;height:562px;background:var(--tx);--d:.1s"></div><div class="a k-eixo-x" style="left:88px;top:700px;width:560px;height:3px;background:var(--tx);--d:.2s"></div><span class="k-leg a tk k-fade" style="top:686px;--d:.3s">0%</span><span class="k-leg a tk k-fade" style="top:546px;--d:.3s">2%</span><span class="k-leg a tk k-fade" style="top:406px;--d:.3s">4%</span><span class="k-leg a tk k-fade" style="top:266px;--d:.3s">6%</span><span class="k-leg a tk k-fade" style="top:126px;--d:.3s">8%</span><div class="a teto k-eixo-x" style="--d:.2s"></div><span class="k-ponto pt k-pop" style="--s:28px;left:140px;top:476px;--d:1.0s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:210px;top:336px;--d:1.08s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:280px;top:581px;--d:1.16s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:350px;top:231px;--d:1.24s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:420px;top:406px;--d:1.32s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:490px;top:546px;--d:1.4s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:560px;top:196px;--d:1.48s"></span><span class="k-ponto pt k-pop" style="--s:28px;left:620px;top:301px;--d:1.56s"></span><div class="k-balao a k-pop" style="left:330px;top:66px;width:240px;--d:1.9s">teto: 8%</div><span class="k-leg a k-fade" style="left:100px;top:745px;font-size:24px;--d:2.1s">Cada ponto: um estado</span></div></div></section>
+
+<section class="slide s7" data-title="Base de cálculo: valor de mercado">
+<div class="k-textura"></div>
+<div class="k-marca">Base de cálculo</div>
+<div class="k-foco">
+ <h2 class="k-titulo tt rv k-mascara" style="--d:.1s">Base de cálculo: valor de mercado</h2>
+ <p class="k-frase k-foco-frase rv" style="--d:.5s">Imóvel de <span class="k-azul">R$ 800 mil</span>: imposto calculado sobre R$ 800 mil, e não sobre o valor do IPTU</p>
+ <p class="k-texto k-foco-apoio ap rv" style="--d:1.1s">Do total herdado, podem ser abatidas as dívidas do falecido</p>
+ <div class="k-foco-cena">
+  <div class="k-eixo k-eixo-x a" style="left:0;top:700px;width:560px;--d:.2s"></div>
+  <div class="k-barra k-barra--cinza k-cresce" style="left:20px;bottom:116px;width:170px;height:150px;--d:.4s"></div>
+  <div class="k-barra k-cresce" style="left:270px;bottom:116px;width:190px;height:520px;--d:.7s"></div>
+  <div class="a faixa"></div>
+  <span class="k-leg a k-fade lg1" style="--d:1.0s">valor do IPTU</span>
+  <span class="k-leg a k-fade lg2" style="--d:1.3s">valor de mercado:<br><span class="k-azul">R$ 800 mil</span></span>
+  <div class="k-balao a k-pop" style="left:245px;top:96px;width:240px;--d:1.5s">a base é esta</div>
+  <span class="k-leg k-laranja a k-fade lg3" style="--d:2.3s">dívidas<br>abatidas</span>
+ </div>
+</div>
+</section>
+
+<section class="slide s8" data-title="Prazos e multas">
+<div class="k-textura"></div>
+<div class="k-marca">Prazos</div>
+<div class="k-linha">
+ <h2 class="k-titulo k-linha-tit rv k-mascara" style="--d:.1s">Prazos e multas</h2>
+ <div class="k-linha-palco">
+  <span class="k-leg a k-fade" style="left:0;top:92px;--d:.2s">morte</span>
+  <span class="k-ponto a k-pop" style="--s:40px;left:20px;top:140px;--d:.2s"></span>
+  <div class="a k-eixo-x" style="left:40px;top:157px;width:600px;height:6px;border-radius:3px;background:var(--sec);--d:.3s"></div>
+  <span class="k-ponto k-pulsa a k-pop" style="--s:40px;left:620px;top:140px;--d:1.1s"></span>
+  <span class="k-leg c a k-fade" style="left:575px;top:92px;width:130px;--d:1.1s">60 dias</span>
+  <div class="a k-eixo-x" style="left:640px;top:157px;width:960px;height:6px;border-radius:3px;background:var(--accent2);--d:1.1s"></div>
+  <span class="k-ponto k-ponto--alerta a k-pop" style="--s:40px;left:1580px;top:140px;--d:2.0s"></span>
+  <span class="k-leg k-laranja c a k-fade" style="left:1500px;top:92px;width:200px;--d:2.0s">multas maiores</span>
+  <div class="k-balao a k-pop" style="left:1000px;top:30px;width:200px;--d:1.8s">+10%</div>
+  <div class="k-guia k-fade" style="left:1099px;top:106px;height:48px;--d:1.9s"></div>
+
+  <p class="k-texto a t rv k-esq" style="left:0;top:210px;width:400px;--d:.3s">Morte: abre-se o prazo</p>
+  <p class="k-texto a t rv k-esq" style="left:500px;top:210px;width:480px;--d:.9s">Em geral, inventário aberto em até <span class="k-azul">60 dias</span> (varia por estado)</p>
+  <p class="k-texto a t rv k-esq" style="left:1040px;top:210px;width:660px;--d:1.5s"><span class="k-laranja">São Paulo:</span> depois disso, multa de 10% sobre o imposto, e atraso maior é punido com mais</p>
+
+  <div class="k-fio a k-fade" style="left:0;top:390px;width:1728px;--d:1.6s"></div>
+
+  <span class="k-leg a k-fade" style="left:0;top:440px;--d:1.6s">doação</span>
+  <span class="k-ponto a k-pop" style="--s:40px;left:20px;top:500px;--d:1.6s"></span>
+  <div class="a k-eixo-x l2" style="left:40px;top:517px;width:580px;height:6px;border-radius:3px;background:var(--sec);--d:1.7s"></div>
+  <span class="k-ponto a k-pop" style="--s:40px;left:620px;top:500px;--d:2.3s"></span>
+  <span class="k-leg c a k-fade" style="left:575px;top:440px;width:130px;--d:2.3s">cinco anos</span>
+  <p class="k-texto a t rv k-dir" style="left:760px;top:480px;width:900px;--d:2.0s">Doação não declarada: o estado tem <span class="k-azul">cinco anos</span> para cobrar (STJ)</p>
+ </div>
+</div>
+</section>
+
+<section class="slide s9" data-title="Antes da reforma: um mapa desigual">
+<div class="k-textura"></div>
+<div class="k-marca">Antes da reforma</div>
+<div class="k-grade">
+ <h2 class="k-titulo k-grade-tit rv k-mascara" style="--d:.1s">Antes da reforma: um mapa desigual</h2>
+ <div class="mz" aria-hidden="true">
+  <i class="c1" style="--i:1;grid-area:1/1/3/2"></i>
+  <i class="c3" style="--i:2;grid-area:3/1/4/2"></i>
+  <i class="c5" style="--i:3;grid-area:4/1/7/2"></i>
+  <i class="c3" style="--i:4;grid-area:1/2/2/3"></i>
+  <i class="c4" style="--i:5;grid-area:2/2/5/3"></i>
+  <i class="c2" style="--i:6;grid-area:5/2/7/3"></i>
+  <i class="c5" style="--i:7;grid-area:1/3/4/4"></i>
+  <i class="c1" style="--i:8;grid-area:4/3/6/4"></i>
+  <i class="c3" style="--i:9;grid-area:6/3/7/4"></i>
+  <i class="c4" style="--i:10;grid-area:1/4/3/5"></i>
+  <i class="c2" style="--i:11;grid-area:3/4/4/5"></i>
+  <i class="c3" style="--i:12;grid-area:4/4/7/5"></i>
+  <i class="c1" style="--i:13;grid-area:1/5/2/6"></i>
+  <i class="c3" style="--i:14;grid-area:2/5/4/6"></i>
+  <i class="c4" style="--i:15;grid-area:4/5/5/6"></i>
+  <i class="c5" style="--i:16;grid-area:5/5/7/6"></i>
+ </div>
+
+ <span class="k-num pin k-pop" style="top:300px;--d:.9s">1</span>
+ <div class="lg k-eixo-x" style="top:326px;--d:1.05s"></div>
+ <div class="k-cartao k-cartao--azul cd rv k-dir" style="top:220px;--d:1.15s">
+  <span class="k-num">1</span>
+  <p class="k-texto"><strong class="k-azul">Alíquotas:</strong> fixa ou progressiva por escolha do estado; muitos usavam percentual único, como os 4% de São Paulo</p>
+ </div>
+
+ <span class="k-num pin k-pop" style="top:530px;--d:1.2s">2</span>
+ <div class="lg k-eixo-x" style="top:556px;--d:1.35s"></div>
+ <div class="k-cartao k-cartao--azul cd rv k-dir" style="top:450px;--d:1.45s">
+  <span class="k-num">2</span>
+  <p class="k-texto"><strong class="k-azul">Quem cobrava:</strong> em geral o estado do inventário ou do doador, o que gerava disputas</p>
+ </div>
+
+ <span class="k-num pin p3 k-pop" style="top:760px;--d:1.5s">3</span>
+ <div class="lg k-eixo-x" style="top:786px;--d:1.65s"></div>
+ <div class="k-cartao k-cartao--alerta cd rv k-dir" style="top:680px;--d:1.75s">
+  <span class="k-num p3">3</span>
+  <p class="k-texto"><strong class="k-laranja">Exterior:</strong> sem lei complementar, o STF (Tema 825) impediu a cobrança, o que favorecia os trusts</p>
+ </div>
+</div>
+</section>
+
+<section class="slide s10" data-title="A mudança veio em duas etapas">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Reforma</div>
+  <div class="k-passos">
+    <h2 class="k-titulo k-passos-tit rv k-mascara" style="--d:.1s">A mudança veio em duas etapas</h2>
+
+    <div class="t-item rv" style="--d:.2s;top:200px">
+      <span class="k-num">1</span>
+      <div class="t-corpo">
+        <p class="t-data">Dezembro de 2023</p>
+        <p class="k-texto t-txt">A Emenda Constitucional 132 altera a Constituição</p>
+      </div>
+    </div>
+    <div class="t-item rv" style="--d:.6s;top:420px">
+      <span class="k-num">2</span>
+      <div class="t-corpo">
+        <p class="t-data">13 de janeiro de 2026</p>
+        <p class="k-texto t-txt">A Lei Complementar 227 escreve as normas gerais, nos arts. 146 a 164</p>
+      </div>
+    </div>
+    <div class="t-item rv" style="--d:1.4s;top:640px">
+      <span class="k-num n3">3</span>
+      <div class="t-corpo">
+        <p class="t-data k-laranja">Titularidade</p>
+        <p class="k-texto t-txt">Os estados continuam sendo os titulares do ITCMD</p>
+      </div>
+    </div>
+
+    <div class="cena" aria-hidden="true">
+      <div class="k-eixo k-eixo-x" style="left:0;top:690px;width:728px;--d:.2s"></div>
+      <div class="k-barra deg deg1 k-cresce" style="--d:.4s"></div>
+      <div class="leg l1 k-fade" style="--d:.9s"><div class="k-leg">Dez. 2023</div><div class="k-rotulo">EC 132</div></div>
+      <div class="k-barra deg deg2 k-cresce" style="--d:.8s"></div>
+      <div class="leg l2 k-fade" style="--d:1.3s"><div class="k-leg">13 jan. 2026</div><div class="k-rotulo">LC 227</div></div>
+      <div class="estado">estado</div>
+      <div class="k-balao bal k-pop" style="--d:1.9s">Titular não mudou</div>
+      <div class="k-leg etq k-fade" style="left:20px;--d:.9s">1ª etapa</div>
+      <div class="k-leg etq k-fade" style="left:250px;--d:1.3s">2ª etapa</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s11" data-title="1ª mudança: progressividade obrigatória">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Mudança 1</div>
+  <div class="k-foco">
+    <p class="k-rotulo rot rv" style="--d:.1s">1ª mudança · progressividade obrigatória</p>
+    <p class="k-frase k-foco-frase rv k-mascara" style="--d:.3s">A alíquota cresce conforme o valor do quinhão, do legado ou da doação, sempre dentro do teto de <span class="k-azul">8%</span></p>
+    <p class="k-texto k-foco-apoio rv" style="--d:.7s">Por faixas, como no imposto de renda: a alíquota mais alta não vale para o valor inteiro</p>
+
+    <div class="cena" aria-hidden="true">
+      <div class="k-eixo k-eixo-x" style="left:20px;top:716px;width:570px;--d:.2s"></div>
+      <div class="k-barra k-barra--cinza base bs1 k-cresce" style="--d:.2s"></div>
+      <div class="k-barra k-barra--cinza base bs2 k-cresce" style="--d:.3s"></div>
+      <div class="k-barra k-barra--cinza base bs3 k-cresce" style="--d:.4s"></div>
+
+      <div class="b t1 r1 c1" style="--d:.8s"></div>
+      <div class="b t1 r1 c2" style="--d:1.4s"></div>
+      <div class="b t2 r2 c2" style="--d:1.5s"></div>
+      <div class="b t1 r1 c3" style="--d:1.95s"></div>
+      <div class="b t2 r2 c3" style="--d:2s"></div>
+      <div class="b t3 r3 c3" style="--d:2.1s"></div>
+
+      <div class="teto k-fade" style="--d:.4s"></div>
+      <div class="k-leg k-laranja teto-leg k-fade" style="--d:.5s">teto de 8%</div>
+      <div class="k-leg fx k-fade" style="left:20px;--d:.8s">1ª faixa</div>
+      <div class="k-leg fx k-fade" style="left:210px;--d:1.4s">2ª faixa</div>
+      <div class="k-leg fx k-fade" style="left:400px;--d:2s">3ª faixa</div>
+      <div class="bola"></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s12" data-title="2ª e 3ª mudanças: quem cobra"><div class="k-textura k-textura--leve"></div><div class="k-marca rv" style="--d:.1s">Mudanças 2 e 3</div><div class="k-diagrama"><h2 class="k-titulo k-diagrama-tit rv k-mascara" style="--d:.1s">2ª e 3ª mudanças: quem cobra</h2><div class="k-diagrama-palco"><svg class="ramos" viewBox="0 0 1728 190" width="1728" height="190" aria-hidden="true"><path class="k-traco c1" style="--len:720;--d:.3s" d="M864 66 V118 H270 V190"/><path class="k-traco c2" style="--len:124;--d:.3s" d="M864 66 V190"/><path class="k-traco c3" style="--len:720;--d:.3s" d="M864 66 V118 H1458 V190"/></svg><div class="k-no raiz rv k-zoom" style="--d:.15s">bem</div><div class="k-no no-c no-1 k-pop" style="--d:1s">Bens móveis</div><div class="k-no no-c no-2 k-pop" style="--d:1.1s">Imóveis</div><div class="k-no no-c no-3 k-pop" style="--d:1.2s">Bens no exterior</div><p class="k-texto col-txt x1 rv" style="--d:1.2s">Bens móveis, aplicações e quotas: estado do domicílio do falecido (ou do doador), e não mais o do inventário</p><p class="k-texto col-txt x2 rv" style="--d:1.4s">Imóveis: o estado onde o bem está</p><p class="k-texto col-txt x3 rv" style="--d:1.6s">Bens no exterior: tributáveis. Se o falecido morava no Brasil, cobra o estado do seu domicílio; se morava fora, o do herdeiro ou donatário</p><div class="pin p1" style="--d:1.5s" aria-hidden="true"><svg width="48" height="64" viewBox="0 0 48 64"><path d="M24 62 C24 62 4 38 4 24 A20 20 0 0 1 44 24 C44 38 24 62 24 62Z" fill="var(--c)"/><circle cx="24" cy="24" r="7" fill="var(--surface)"/></svg></div><div class="pin p2" style="--d:1.7s" aria-hidden="true"><svg width="48" height="64" viewBox="0 0 48 64"><path d="M24 62 C24 62 4 38 4 24 A20 20 0 0 1 44 24 C44 38 24 62 24 62Z" fill="var(--c)"/><circle cx="24" cy="24" r="7" fill="var(--surface)"/></svg></div><div class="pin p3" style="--d:1.9s" aria-hidden="true"><svg width="48" height="64" viewBox="0 0 48 64"><path d="M24 62 C24 62 4 38 4 24 A20 20 0 0 1 44 24 C44 38 24 62 24 62Z" fill="var(--c)"/><circle cx="24" cy="24" r="7" fill="var(--surface)"/></svg></div></div></div></section>
+
+<section class="slide s13" data-title="4ª mudança: soma de doações">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Mudança 4</div>
+  <div class="k-foco">
+    <p class="k-rotulo rot rv" style="--d:.1s">4ª mudança · soma de doações sucessivas</p>
+    <p class="k-frase k-foco-frase rv k-mascara" style="--d:.3s">Os estados podem somar as doações entre as mesmas pessoas, num prazo definido em lei estadual</p>
+    <p class="k-texto k-foco-apoio rv" style="--d:.7s">A tabela vale sobre o total acumulado, descontando o que já foi pago</p>
+
+    <div class="cena" aria-hidden="true">
+      <div class="k-eixo k-eixo-x" style="left:0;top:700px;width:648px;--d:.1s"></div>
+
+      <div class="sg g1" style="--x:-440px;--y:0px;--d:.3s"></div>
+      <div class="sg g2" style="--x:-340px;--y:180px;--d:.4s"></div>
+      <div class="sg g3" style="--x:-240px;--y:360px;--d:.5s"></div>
+
+      <div class="k-leg ini i1" style="--d:.3s">doação 1</div>
+      <div class="k-leg ini i2" style="--d:.4s">doação 2</div>
+      <div class="k-leg ini i3" style="--d:.5s">doação 3</div>
+
+      <div class="pago"></div>
+      <div class="k-leg k-laranja pago-leg k-fade" style="--d:2.2s">já pago</div>
+      <div class="k-leg tot-leg k-fade" style="--d:1.9s">total acumulado</div>
+      <div class="dentro d3 k-fade" style="--d:1.9s">doação 3</div>
+      <div class="dentro d2 k-fade" style="--d:1.9s">doação 2</div>
+      <div class="dentro d1 k-fade" style="--d:1.9s">doação 1</div>
+
+      <div class="k-balao bal k-pop" style="--d:2.1s">a tabela vale aqui</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s14" data-title="5ª a 7ª mudanças">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Mudanças 5 a 7</div>
+  <div class="k-grade">
+    <h2 class="k-titulo k-grade-tit rv k-mascara" style="--d:.1s">5ª a 7ª mudanças: base, doação e trusts</h2>
+
+    <div class="c c1 k-cartao k-cartao--azul rv k-zoom" style="--d:.3s">
+      <div class="hd"><span class="k-num">5ª</span><span class="k-rotulo">Base de cálculo</span></div>
+      <p class="k-texto tx">Valor de mercado, inclusive para quotas e ações; holdings pelo patrimônio ajustado</p>
+      <div class="sc">
+        <svg class="ln" width="488" height="300" viewBox="0 0 488 300" aria-hidden="true">
+          <path class="k-traco" style="--len:200;--d:.8s" d="M118,150 C170,150 170,54 226,54"/>
+          <path class="k-traco" style="--len:200;--d:.8s" d="M118,150 L226,150"/>
+          <path class="k-traco" style="--len:200;--d:.8s" d="M118,150 C170,150 170,246 226,246"/>
+        </svg>
+        <div class="hold k-pop" style="--d:.7s">holding</div>
+        <span class="k-ponto pt" style="--s:44px;top:32px;--dy:96px;--d:.9s"></span>
+        <span class="k-ponto pt" style="--s:44px;top:128px;--dy:0px;--d:1s"></span>
+        <span class="k-ponto pt" style="--s:44px;top:224px;--dy:-96px;--d:1.1s"></span>
+        <span class="vb" style="top:37px;width:90px;--d:1.6s">R$</span>
+        <span class="vb" style="top:133px;width:150px;--d:1.7s">R$</span>
+        <span class="vb" style="top:229px;width:70px;--d:1.8s">R$</span>
+      </div>
+    </div>
+
+    <div class="c c2 k-cartao k-cartao--azul rv k-zoom" style="--d:.6s">
+      <div class="hd"><span class="k-num">6ª</span><span class="k-rotulo">Doação</span></div>
+      <p class="k-texto tx">Doação em sentido amplo: presume-se simulação se falta capacidade financeira ao comprador e há vínculo com o real beneficiário</p>
+      <div class="sc">
+        <span class="k-ponto pa k-fade" style="--s:56px;left:20px;top:150px;--d:1s"></span>
+        <span class="k-leg lb k-fade" style="left:0;top:216px;--d:1s">comprador</span>
+        <div class="rb k-eixo-x" style="--d:1.1s"></div>
+        <span class="k-leg lb k-fade" style="left:194px;top:204px;width:100px;text-align:center;--d:1.3s">renda</span>
+        <svg class="arco" width="488" height="300" viewBox="0 0 488 300" aria-hidden="true" style="--d:1.4s">
+          <path class="ln2" d="M52,146 Q244,0 436,146"/>
+          <path class="hd2" d="M436,146 L424.5,124.7 L412.5,140.7 Z"/>
+        </svg>
+        <span class="k-leg lb k-laranja k-fade" style="left:104px;top:30px;width:280px;text-align:center;--d:1.9s">presume-se simulação</span>
+        <span class="k-ponto pa k-pulsa k-fade" style="--s:56px;left:412px;top:150px;--d:2.5s"></span>
+        <span class="k-leg lb k-fade" style="left:298px;top:216px;width:190px;text-align:right;--d:1s">beneficiário real</span>
+      </div>
+    </div>
+
+    <div class="c c3 k-cartao k-cartao--azul rv k-zoom" style="--d:.9s">
+      <div class="hd"><span class="k-num">7ª</span><span class="k-rotulo">Trusts</span></div>
+      <p class="k-texto tx">Trusts no exterior: imposto na entrega dos bens ao beneficiário</p>
+      <div class="sc">
+        <div class="k-circulo tc k-fade" style="--d:1.3s">trust</div>
+        <span class="k-leg lb k-fade" style="left:0;top:244px;width:120px;--d:1.4s">no exterior</span>
+        <div class="k-eixo k-eixo-x" style="left:114px;top:178px;width:190px;--d:1.4s"></div>
+        <span class="go" style="--d:1.8s"></span>
+        <span class="k-ponto pa k-fade" style="--s:56px;left:306px;top:152px;--d:1.6s"></span>
+        <span class="k-leg lb k-fade" style="left:249px;top:222px;width:170px;text-align:center;--d:1.6s">beneficiário</span>
+        <div class="k-guia k-fade" style="left:333px;top:118px;height:30px;--d:2.6s"></div>
+        <div class="k-balao bal k-pop" style="--d:2.5s">imposto na entrega</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s15" data-title="Para fixar: antes x agora">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Antes × agora</div>
+  <div class="k-duas">
+    <h2 class="k-titulo k-duas-tit rv k-mascara" style="--d:.1s">Para fixar: antes x agora</h2>
+
+    <div class="pn pa k-painel rv k-esq" style="--d:.2s">
+      <h3 class="cab">Antes</h3>
+      <div class="plot" aria-hidden="true">
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:40px;top:150px;--d:.5s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:130px;top:30px;--d:.56s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:200px;top:170px;--d:.62s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:290px;top:60px;--d:.68s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:370px;top:190px;--d:.74s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:440px;top:20px;--d:.8s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:520px;top:120px;--d:.86s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:600px;top:200px;--d:.92s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:660px;top:50px;--d:.98s"></span>
+        <span class="k-ponto k-ponto--cinza d k-fade" style="--s:28px;left:700px;top:140px;--d:1.04s"></span>
+      </div>
+      <div class="k-eixo base k-eixo-x" style="--d:.4s"></div>
+      <ul class="lista">
+        <li class="k-fade" style="--d:.8s"><b>Alíquota:</b> escolha do estado</li>
+        <li class="k-fade" style="--d:.9s"><b>Bens móveis:</b> estado do inventário ou do doador</li>
+        <li class="k-fade" style="--d:1s"><b>Exterior:</b> não tributável (STF, Tema 825)</li>
+        <li class="k-fade" style="--d:1.1s"><b>Doações:</b> tributadas isoladamente</li>
+        <li class="k-fade" style="--d:1.2s"><b>Previdência privada:</b> disputa judicial</li>
+      </ul>
+    </div>
+
+    <div class="k-duas-meio k-fade" style="--d:1.2s" aria-hidden="true">→</div>
+
+    <div class="pn pb k-painel rv k-dir" style="--d:.4s">
+      <h3 class="cab">Agora</h3>
+      <div class="plot" aria-hidden="true">
+        <span class="k-ponto d" style="--s:28px;left:80px;top:194px;--fx:-964px;--fy:-44px;--d:1.2s"></span>
+        <span class="k-ponto d" style="--s:28px;left:80px;top:154px;--fx:-874px;--fy:-124px;--d:1.24s"></span>
+        <span class="k-ponto d" style="--s:28px;left:230px;top:194px;--fx:-954px;--fy:-24px;--d:1.28s"></span>
+        <span class="k-ponto d" style="--s:28px;left:230px;top:154px;--fx:-864px;--fy:-94px;--d:1.32s"></span>
+        <span class="k-ponto d" style="--s:28px;left:380px;top:194px;--fx:-934px;--fy:-4px;--d:1.36s"></span>
+        <span class="k-ponto d" style="--s:28px;left:380px;top:154px;--fx:-864px;--fy:-134px;--d:1.4s"></span>
+        <span class="k-ponto d" style="--s:28px;left:530px;top:194px;--fx:-934px;--fy:-74px;--d:1.44s"></span>
+        <span class="k-ponto d" style="--s:28px;left:530px;top:154px;--fx:-854px;--fy:46px;--d:1.48s"></span>
+        <span class="k-ponto d" style="--s:28px;left:680px;top:194px;--fx:-944px;--fy:-144px;--d:1.52s"></span>
+        <span class="k-ponto d" style="--s:28px;left:680px;top:154px;--fx:-904px;--fy:-14px;--d:1.56s"></span>
+      </div>
+      <div class="k-eixo base k-eixo-x" style="--d:.6s"></div>
+      <ul class="lista">
+        <li class="k-fade" style="--d:2s"><b>Alíquota:</b> progressiva, teto de 8%</li>
+        <li class="k-fade" style="--d:2.1s"><b>Bens móveis:</b> domicílio do falecido ou do doador</li>
+        <li class="k-fade" style="--d:2.2s"><b>Exterior:</b> tributável</li>
+        <li class="k-fade" style="--d:2.3s"><b>Doações:</b> podem ser somadas</li>
+        <li class="k-fade" style="--d:2.4s"><b>Previdência privada:</b> não incide (Tema 1.214)</li>
+      </ul>
+    </div>
+
+    <div class="k-balao k-balao--cima nota k-pop" style="--d:2.7s">só vale depois da lei de cada estado</div>
+  </div>
+</section>
+
+<section class="slide s16" data-title="Três exceções, três origens"><div class="k-textura"></div><div class="k-marca rv" style="--d:.1s">Exceções</div><div class="k-diagrama"><h2 class="k-titulo k-diagrama-tit rv k-mascara" style="--d:.1s">Três exceções, três origens</h2><div class="barra k-cresce" style="--d:.2s"></div><span class="k-leg lc k-fade" style="left:0;top:196px;--d:.3s">bens transmitidos</span><div class="cn" style="left:60px;top:274px;width:880px;--d:.8s"></div><div class="cn" style="left:60px;top:464px;width:880px;--d:1s"></div><div class="cn" style="left:60px;top:654px;width:880px;--d:1.2s"></div><span class="k-leg lc fl k-fade" style="left:84px;top:284px;--d:1.1s">Constituição</span><span class="k-leg lc fl k-fade" style="left:84px;top:474px;--d:1.3s">Lei complementar</span><span class="k-leg lc fl k-fade" style="left:84px;top:664px;--d:1.5s">Lei estadual</span><div class="grupo"></div><span class="az" style="left:28px;top:806px;--sy:-100px;--d:1s"></span><span class="az" style="left:68px;top:806px;--sy:-100px;--d:1.08s"></span><span class="az" style="left:108px;top:806px;--sy:-100px;--d:1.16s"></span><span class="az" style="left:148px;top:806px;--sy:-100px;--d:1.24s"></span><span class="az" style="left:188px;top:806px;--sy:-100px;--d:1.32s"></span><span class="az" style="left:228px;top:806px;--sy:-100px;--d:1.4s"></span><span class="lr" style="left:640px;top:287px;--sx:-610px;--sy:0px;--mx:-305px;--d:1.1s"></span><span class="lr" style="left:690px;top:287px;--sx:-660px;--sy:0px;--mx:-330px;--d:1.2s"></span><span class="lr" style="left:740px;top:287px;--sx:-710px;--sy:0px;--mx:-355px;--d:1.3s"></span><span class="lr" style="left:640px;top:477px;--sx:-610px;--sy:0px;--mx:-305px;--d:1.3s"></span><span class="lr" style="left:690px;top:477px;--sx:-660px;--sy:0px;--mx:-330px;--d:1.4s"></span><span class="lr" style="left:740px;top:477px;--sx:-710px;--sy:0px;--mx:-355px;--d:1.5s"></span><span class="lr" style="left:640px;top:667px;--sx:-610px;--sy:0px;--mx:-305px;--d:1.5s"></span><span class="lr" style="left:690px;top:667px;--sx:-660px;--sy:0px;--mx:-330px;--d:1.6s"></span><span class="lr" style="left:740px;top:667px;--sx:-710px;--sy:0px;--mx:-355px;--d:1.7s"></span><span class="k-leg k-azul lc k-fade" style="left:28px;top:846px;--d:2.2s">dentro da conta</span><div class="k-balao bal k-pop" style="--d:2.3s">fora da conta</div><div class="cd k-painel rv k-dir" style="top:210px;--d:1s"><h3>Imunidade</h3><p>Vem da Constituição e impede a cobrança</p></div><div class="cd k-painel rv k-dir" style="top:400px;--d:1.2s"><h3>Não incidência</h3><p>Situação que a lei complementar diz que não gera imposto</p></div><div class="cd k-painel rv k-dir" style="top:590px;--d:1.4s"><h3>Isenção</h3><p>Benefício que cada estado concede por sua própria lei</p></div></div></section>
+
+<section class="slide s17" data-title="Imunidades (art. 149 da LC 227/2026)">
+  <div class="k-textura"></div>
+  <div class="k-marca rv" style="--d:.1s">Imunidades</div>
+  <div class="k-grade">
+    <h2 class="k-titulo k-grade-tit rv k-mascara" style="--d:.1s">Imunidades (art. 149 da LC 227/2026)</h2>
+
+    <div class="c k-cartao k-cartao--azul rv k-zoom" style="left:0;top:220px;--d:.2s">
+      <span class="ix">01</span>
+      <h3 class="ld">União, estados, DF e municípios</h3>
+      <p class="rs">com autarquias e fundações públicas</p>
+      <svg class="halo" viewBox="0 0 584 334" aria-hidden="true">
+        <rect class="k-traco r1" pathLength="1000" style="--len:1000;--d:1.1s" x="8" y="8" width="568" height="318" rx="30"/>
+        <rect class="k-traco r2" pathLength="1000" style="--len:1000;--d:1.25s" x="2" y="2" width="580" height="330" rx="36"/>
+      </svg>
+    </div>
+    <div class="c k-cartao k-cartao--azul rv k-zoom" style="left:594px;top:220px;--d:.34s">
+      <span class="ix">02</span>
+      <h3 class="ld">Entidades religiosas e templos</h3>
+      <p class="rs">inclusive suas organizações assistenciais</p>
+      <svg class="halo" viewBox="0 0 584 334" aria-hidden="true">
+        <rect class="k-traco r1" pathLength="1000" style="--len:1000;--d:1.2s" x="8" y="8" width="568" height="318" rx="30"/>
+        <rect class="k-traco r2" pathLength="1000" style="--len:1000;--d:1.35s" x="2" y="2" width="580" height="330" rx="36"/>
+      </svg>
+    </div>
+    <div class="c k-cartao k-cartao--azul rv k-zoom" style="left:1188px;top:220px;--d:.48s">
+      <span class="ix">03</span>
+      <h3 class="ld">Partidos políticos</h3>
+      <p class="rs">e sindicatos de trabalhadores</p>
+      <svg class="halo" viewBox="0 0 584 334" aria-hidden="true">
+        <rect class="k-traco r1" pathLength="1000" style="--len:1000;--d:1.3s" x="8" y="8" width="568" height="318" rx="30"/>
+        <rect class="k-traco r2" pathLength="1000" style="--len:1000;--d:1.45s" x="2" y="2" width="580" height="330" rx="36"/>
+      </svg>
+    </div>
+    <div class="c k-cartao k-cartao--azul rv k-zoom" style="left:0;top:580px;--d:.62s">
+      <span class="ix">04</span>
+      <h3 class="ld">Instituições sem fins lucrativos</h3>
+      <p class="rs">de relevância pública e social, com requisitos</p>
+      <svg class="halo" viewBox="0 0 584 334" aria-hidden="true">
+        <rect class="k-traco r1" pathLength="1000" style="--len:1000;--d:1.4s" x="8" y="8" width="568" height="318" rx="30"/>
+        <rect class="k-traco r2" pathLength="1000" style="--len:1000;--d:1.55s" x="2" y="2" width="580" height="330" rx="36"/>
+      </svg>
+    </div>
+    <div class="c k-cartao k-cartao--azul rv k-zoom" style="left:594px;top:580px;--d:.76s">
+      <span class="ix">05</span>
+      <h3 class="ld">Bem imune</h3>
+      <p class="rs">como livros e periódicos</p>
+      <svg class="halo" viewBox="0 0 584 334" aria-hidden="true">
+        <rect class="k-traco r1" pathLength="1000" style="--len:1000;--d:1.5s" x="8" y="8" width="568" height="318" rx="30"/>
+        <rect class="k-traco r2" pathLength="1000" style="--len:1000;--d:1.65s" x="2" y="2" width="580" height="330" rx="36"/>
+        <rect class="fl" pathLength="1000" x="2" y="2" width="580" height="330" rx="36"/>
+      </svg>
+    </div>
+
+    <div class="nt k-painel rv k-dir" style="--d:1.9s">
+      <p class="k-texto">Quando o herdeiro ou donatário é uma dessas entidades, ou o bem é imune, não há ITCMD.</p>
+    </div>
+
+    <div class="dg">
+      <span class="k-ponto k-ponto--alerta" style="--s:40px"></span>
+      <span class="k-leg">imposto</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide s18" data-title="Renunciar à herança: depende de como">
+  <div class="k-textura"></div>
+  <div class="k-marca">Não incidência</div>
+  <div class="k-caso">
+    <h2 class="k-titulo k-caso-tit rv k-mascara" style="--d:.1s">Renunciar à herança: depende de como</h2>
+    <p class="k-texto sit rv" style="--d:.4s">Situação: um herdeiro renuncia à herança</p>
+
+    <div class="pal">
+      <svg class="cam" viewBox="0 0 1728 400" width="1728" height="400" aria-hidden="true">
+        <path class="k-traco" style="--len:600;--d:.7s" d="M230 170 C450 170 450 65 690 65"/>
+        <path class="k-traco" style="--len:600;--d:1s" d="M230 250 C450 250 450 335 690 335"/>
+        <polygon class="ah k-fade" style="--d:1.7s" points="696,65 668,50 668,80"/>
+        <polygon class="ah k-fade" style="--d:2s" points="696,335 668,320 668,350"/>
+      </svg>
+      <div class="k-circulo herd rv k-zoom" style="--d:.5s">Herdeiro que renuncia</div>
+      <div class="k-no n1 rv k-dir" style="--d:1.2s">Conjunto de herdeiros</div>
+      <div class="k-no n2 rv k-dir" style="--d:1.4s">Pessoa determinada</div>
+    </div>
+
+    <div class="frag f1">
+      <p class="res ra">Não incide ITCMD</p>
+      <div class="k-cartao k-cartao--azul card ca">
+        <p class="k-rotulo">Renúncia pura e simples</p>
+        <p class="k-texto">Sem condição e sem ato de aceitação: não incide ITCMD</p>
+      </div>
+    </div>
+
+    <div class="frag f2">
+      <svg class="ov" viewBox="0 0 1728 400" width="1728" height="400" aria-hidden="true">
+        <path class="lar" d="M230 250 C450 250 450 335 690 335"/>
+        <polygon class="ah2" points="696,335 668,320 668,350"/>
+      </svg>
+      <div class="k-balao bal">doação</div>
+      <p class="res rb">Paga ITCMD como doação</p>
+      <div class="k-cartao k-cartao--alerta card cb">
+        <p class="k-rotulo">Em favor de pessoa determinada</p>
+        <p class="k-texto">Tratada como doação: paga imposto</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s19" data-title="Outros casos de não incidência e isenções"><div class="k-textura"></div><div class="k-marca">Não incidência</div><div class="k-foco"><h2 class="k-frase tit rv k-mascara" style="--d:.1s">Outros casos de não incidência e as isenções estaduais</h2><div class="fv"></div><div class="k-num num rv k-esq" style="--y:230px;--d:.5s">1</div><p class="k-texto it rv" style="--y:230px;--d:.5s">VGBL, PGBL, seguro e pecúlio não pagam, nem se recebidos por terceiro (STF, Tema 1.214)</p><span class="k-ponto k-pulsa pt k-pop" style="--y:230px;--d:.7s"></span><div class="k-balao bl k-pop" style="--y:230px;--bc:var(--sec);--d:.85s">sem imposto</div><div class="k-num num rv k-esq" style="--y:380px;--d:.9s">2</div><p class="k-texto it rv" style="--y:380px;--d:.9s">Extinção de usufruto que devolve a propriedade plena a quem o instituiu evita segunda cobrança</p><span class="k-ponto k-pulsa pt k-pop" style="--y:380px;--d:1.1s"></span><div class="k-balao bl k-pop" style="--y:380px;--bc:var(--sec);--d:1.25s">sem imposto</div><div class="k-num num rv k-esq" style="--y:530px;--d:1.3s">3</div><p class="k-texto it rv" style="--y:530px;--d:1.3s">Extinção de fideicomisso e certas transmissões ligadas a trusts</p><span class="k-ponto k-pulsa pt k-pop" style="--y:530px;--d:1.5s"></span><div class="k-balao bl k-pop" style="--y:530px;--bc:var(--sec);--d:1.65s">sem imposto</div><div class="k-num num rv k-esq" style="--y:680px;--d:1.7s">4</div><p class="k-texto it rv" style="--y:680px;--d:1.7s">Isenções estaduais variam: confira a lei do estado</p><span class="k-ponto k-pulsa pt k-pop" style="--y:680px;--d:1.9s"></span><div class="k-balao bl bl4 k-pop" style="--y:680px;--bc:var(--accent2);--d:2.05s">varia por estado</div><p class="k-leg cmp-t k-fade" style="--d:1.9s">valor segue intacto</p><div class="cb cb1 k-cresce" style="--d:2s"></div><div class="cb cb2 k-fade" style="--d:2.6s"></div><div class="cbase k-fade" style="--d:1.9s"></div><p class="k-leg cl cl1 k-fade" style="--d:2.2s">herança</p><p class="k-leg cl cl2 k-fade" style="--d:2.6s">imposto = 0</p></div></section>
+
+<section class="slide s20" data-title="Exemplo prático: herança de R$ 800 mil">
+  <div class="k-textura k-textura--leve"></div>
+  <div class="k-cena">
+    <h2 class="k-titulo tit rv k-mascara" style="--d:.1s">Exemplo prático: herança de R$ 800 mil</h2>
+    <p class="k-apoio sub rv" style="--d:.3s">Tabela fictícia, só para ensinar a lógica</p>
+
+    <div class="palco">
+      <!-- total -->
+      <div class="tot k-eixo-x" style="--d:.3s"></div>
+      <div class="tk k-fade" style="left:64px;--d:.3s"></div>
+      <div class="tk k-fade" style="left:1661px;--d:.9s"></div>
+      <p class="k-leg totl k-fade" style="--d:.5s">Herança: R$ 800 mil</p>
+
+      <!-- segmentos -->
+      <div class="seg seg1 k-eixo-x" style="--d:.5s"></div>
+      <div class="seg seg2 k-eixo-x" style="--d:.9s"></div>
+      <div class="seg seg3 k-eixo-x" style="--d:1.3s"></div>
+
+      <p class="k-leg val k-fade" style="left:64px;width:200px;--d:.9s">R$ 100 mil</p>
+      <p class="k-leg val k-fade" style="left:264px;width:800px;--d:1.3s">R$ 400 mil</p>
+      <p class="k-leg val k-fade" style="left:1064px;width:600px;--d:1.7s">R$ 300 mil</p>
+
+      <!-- alíquota e imposto -->
+      <div class="gu k-fade" style="left:164px;--d:1.1s"></div>
+      <div class="gu k-fade" style="left:664px;--d:1.5s"></div>
+      <div class="gu k-fade" style="left:1364px;--d:1.9s"></div>
+
+      <div class="col k-pop" style="left:64px;width:200px;--d:1.1s">
+        <p class="aliq">2%</p><p class="imp">R$ 2 mil</p>
+      </div>
+      <div class="col k-pop" style="left:264px;width:800px;--d:1.5s">
+        <p class="aliq">4%</p><p class="imp">R$ 16 mil</p>
+      </div>
+      <div class="col k-pop" style="left:1064px;width:600px;--d:1.9s">
+        <p class="aliq">6%</p><p class="imp">R$ 18 mil</p>
+      </div>
+
+      <!-- resultado -->
+      <p class="k-rotulo res-r k-fade" style="--d:2.5s">Imposto total</p>
+      <p class="res-n">R$ 36 mil</p>
+      <div class="k-balao bal k-pop" style="--d:3s">4,5% efetivo</div>
+      <p class="k-apoio ap k-fade" style="--d:3.2s">Cada faixa paga só a sua alíquota.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide s21" data-title="O erro comum e a comparação">
+  <div class="k-textura"></div>
+  <div class="k-marca">Exemplo: R$ 800 mil</div>
+  <div class="k-duas">
+    <h2 class="k-titulo k-duas-tit rv k-mascara" style="--d:.1s">O erro comum e a comparação</h2>
+    <p class="k-apoio sub rv" style="--d:.3s">Imposto devido sobre uma herança de R$ 800 mil</p>
+
+    <div class="k-eixo k-eixo-x base" style="--d:.2s"></div>
+
+    <div class="k-barra k-barra--cinza k-cresce b b1" style="--d:.4s"></div>
+    <div class="k-barra k-cresce b b2" style="--d:.7s"></div>
+    <div class="k-barra k-cresce b b3" style="--d:1s"></div>
+
+    <div class="bd bd1 k-pop" style="--d:1.2s"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle class="c-x" cx="32" cy="32" r="32"/><path class="gl" d="M21 21L43 43M43 21L21 43"/></svg></div>
+    <div class="bd bd2 k-pop" style="--d:1.5s"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle class="c-ok" cx="32" cy="32" r="32"/><path class="gl" d="M18 33L28 43L46 22"/></svg></div>
+
+    <p class="val v1 k-laranja k-fade" style="--d:.9s">R$ 48 mil</p>
+    <p class="val v2 k-azul k-fade" style="--d:1.2s">R$ 36 mil</p>
+    <p class="val v3 k-fade" style="--d:1.5s">R$ 32 mil</p>
+
+    <p class="k-texto cap c1 rv" style="--d:.9s">Errado: 6% sobre os R$ 800 mil inteiros</p>
+    <p class="k-texto cap c2 rv" style="--d:1.2s">Certo: por faixas (4,5% efetivo)</p>
+    <p class="k-texto cap c3 rv" style="--d:1.5s">Alíquota fixa de 4%</p>
+
+    <div class="gd k-fade" style="--d:1.7s"></div>
+    <div class="band k-pop" style="--d:1.9s"></div>
+    <div class="k-balao bal k-pop" style="--d:2s">R$ 4 mil a menos que o certo</div>
+
+    <p class="k-apoio nota rv" style="--d:2.2s">Não aplique a alíquota da última faixa sobre tudo. O resultado real depende da tabela de cada estado.</p>
+  </div>
+</section>
+
+<section class="slide s22" data-title="Situação atual: a LC não cobra, o estado cobra"><div class="k-textura"></div><div class="k-marca">Situação atual</div><div class="k-foco"><h2 class="k-frase tit rv k-mascara" style="--d:.1s">Situação atual: a LC não cobra, o estado cobra</h2><p class="k-texto it it1 rv" style="--d:.4s">A LC 227/2026 fixa normas gerais; quem cobra é a lei de cada estado</p><p class="k-texto it it2 rv" style="--d:.7s">Lei estadual de 2026 só vale a partir de 1º de janeiro de 2027, e 90 dias após a publicação</p><div class="k-eixo k-eixo-x eixo" style="--d:.9s"></div><div class="folha lc"><span class="fn">LC 227/2026</span><span class="k-rotulo fr">normas gerais</span><i class="ln"></i><span class="xis">✕</span></div><p class="k-leg k-laranja v0 k-fade" style="--d:1.5s">não cobra</p><div class="frag f1"><div class="folha lei"><span class="fn">lei estadual</span><span class="k-rotulo fr">de 2026</span><i class="ln"></i><i class="ln" style="width:70%"></i></div><div class="conn"></div><div class="seg1"></div><div class="seg2"></div><div class="seg3"></div><div class="tk22"></div><p class="k-leg dias">90 dias</p><p class="k-leg tk-t">+90 dias</p><p class="k-leg pub-t">publicação</p><div class="bar"></div><p class="k-leg k-laranja bar-t">1º de janeiro de 2027</p><p class="k-leg k-azul fim">passa a valer</p><div class="mkw"><span class="k-ponto k-pulsa"></span></div></div></div></section>
+
+<section class="slide s23" data-title="Os estados até outubro de 2026"><div class="k-textura k-textura--leve"></div><div class="k-marca">ITCMD</div><div class="k-grade"><h2 class="k-titulo k-grade-tit rv k-mascara" style="--d:.1s">Os estados até outubro de 2026</h2><div class="mapa" aria-hidden="true"><div class="t t--azul k-pop" style="left:0;top:0;--d:.4s;--d2:1.0s"><span class="fill"></span><span class="sg">SC</span><span class="st"><i class="k-cresce" style="--d:1.3s"></i><i class="k-cresce" style="--d:1.45s"></i><i class="k-cresce" style="--d:1.6s"></i></span></div><div class="t t--azul k-pop" style="left:196px;top:0;--d:.5s;--d2:1.1s"><span class="fill"></span><span class="sg">RS</span><span class="st"><i class="k-cresce" style="--d:1.4s"></i><i class="k-cresce" style="--d:1.55s"></i><i class="k-cresce" style="--d:1.7s"></i></span></div><div class="t t--cinza k-pop" style="left:0;top:148px;--d:.8s"><span class="sg">PR</span><span class="pct">4%</span></div><div class="t t--cinza k-pop" style="left:196px;top:148px;--d:.6s"><span class="sg">SP</span><span class="pct">4%</span><svg class="relogio" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="var(--surface)" stroke="var(--accent2-hi)" stroke-width="3"/><line x1="18" y1="18" x2="18" y2="8" stroke="var(--accent2-hi)" stroke-width="3" stroke-linecap="round"/><g class="mao"><line x1="18" y1="18" x2="26" y2="18" stroke="var(--tx)" stroke-width="3" stroke-linecap="round"/></g></svg></div><div class="tram k-fade" style="--d:1.3s">projeto em tramitação</div><div class="t k-pop" style="left:0;top:296px;--d:1.5s"><span class="sg">MT</span><span class="q" style="--d:1.9s">?</span></div><div class="t k-pop" style="left:196px;top:296px;--d:1.55s"><span class="sg">GO</span><span class="q" style="--d:2.1s">?</span></div><div class="t k-pop" style="left:392px;top:296px;--d:1.6s"><span class="sg">MG</span><span class="q" style="--d:2.3s">?</span></div><div class="t k-pop" style="left:588px;top:296px;--d:1.65s"><span class="sg">ES</span><span class="q" style="--d:2.0s">?</span></div><div class="t k-pop" style="left:0;top:444px;--d:1.7s"><span class="sg">RJ</span><span class="q" style="--d:2.2s">?</span></div><div class="t k-pop" style="left:196px;top:444px;--d:1.75s"><span class="sg">BA</span><span class="q" style="--d:2.4s">?</span></div><div class="leg k-fade" style="--d:1.8s"><div class="lg"><span class="qd qd--a"></span>Tabela progressiva</div><div class="lg"><span class="qd qd--b"></span>4% fixo</div><div class="lg"><span class="qd qd--c"></span>Confirmar na lei</div></div></div><div class="lista"><div class="it rv k-dir" style="--d:.5s"><p><strong>RS e SC:</strong> já tinham tabelas progressivas</p></div><div class="it it--b rv k-dir" style="--d:.8s"><p><strong>SP e PR:</strong> 4% fixos; projeto paulista de progressividade em tramitação</p></div><div class="it it--c rv k-dir" style="--d:1.1s"><p><strong>Levantamentos divergem</strong> sobre quem ainda não se adaptou: confirme na legislação do estado</p></div><div class="it rv k-dir" style="--d:1.4s"><p><strong>Tendência</strong> apontada por especialistas: mais arrecadação onde a alíquota fixa virar progressiva</p></div></div></div></section>
+
+<section class="slide s24" data-title="Doar em vida evita o imposto?">
+  <div class="k-textura"></div>
+  <div class="k-marca">ITCMD</div>
+  <div class="k-pergunta">
+    <p class="k-rotulo pre rv" style="--d:.1s">Para a turma</p>
+    <h2 class="k-pergunta-q rv k-mascara" style="--d:.25s">Doar em vida evita o imposto?</h2>
+
+    <div class="quest rv k-zoom" style="--d:.7s" aria-hidden="true">?</div>
+    <p class="k-leg quest-leg k-fade" style="--d:1.2s">pense antes de apertar →</p>
+
+    <div class="k-painel resp frag">
+      <p class="k-rotulo">Resposta</p>
+      <span class="carimbo">Não.</span>
+      <p class="k-texto">A doação também paga ITCMD, e com a soma de doações sucessivas, fracionar deixa de compensar.</p>
+    </div>
+
+    <div class="k-painel exc frag">
+      <p class="k-rotulo">Exceções</p>
+      <p class="k-texto">Usufruto, previdência privada e imunidades.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide s25" data-title="Três ideias para levar">
+  <div class="k-textura k-textura--leve"></div>
+  <div class="k-marca">ITCMD</div>
+  <div class="k-recap">
+    <h2 class="k-titulo k-recap-tit rv k-mascara" style="--d:.1s">Três ideias para levar</h2>
+
+    <div class="k-recap-lista" style="--cols:3">
+      <div class="k-cartao k-cartao--azul cd rv k-zoom" style="--d:.2s">
+        <div class="topo">
+          <svg viewBox="0 0 160 130" aria-hidden="true">
+            <path class="k-traco" style="--len:1;--d:.5s" pathLength="1" d="M80 122 C80 122 36 80 36 50 A44 44 0 0 1 124 50 C124 80 80 122 80 122 Z"/>
+            <circle class="ic-or k-pop" style="--d:1.1s" cx="80" cy="50" r="15"/>
+          </svg>
+          <span class="k-num k-pop" style="--d:1.0s">1</span>
+        </div>
+        <h3>O imposto</h3>
+        <p>ITCMD: estadual, herança e doação, pago por quem recebe, sobre o valor de mercado, teto de 8%</p>
+      </div>
+
+      <div class="k-cartao k-cartao--azul cd rv k-zoom" style="--d:.7s">
+        <div class="topo">
+          <svg viewBox="0 0 160 130" aria-hidden="true">
+            <polyline class="k-traco" style="--len:1;--d:1.0s" pathLength="1" points="14,116 14,90 54,90 54,64 94,64 94,38 146,38 146,116 14,116"/>
+            <circle class="ic-or k-pop" style="--d:1.6s" cx="74" cy="50" r="12"/>
+          </svg>
+          <span class="k-num k-pop" style="--d:1.5s">2</span>
+        </div>
+        <h3>A reforma</h3>
+        <p>Progressividade obrigatória, domicílio para bens móveis e tributação de bens no exterior</p>
+      </div>
+
+      <div class="k-cartao k-cartao--alerta cd rv k-zoom" style="--d:1.2s">
+        <div class="topo">
+          <svg viewBox="0 0 160 130" aria-hidden="true">
+            <path class="k-traco" style="--len:1;--d:1.5s" pathLength="1" d="M80 10 L132 30 V66 C132 98 106 114 80 124 C54 114 28 98 28 66 V30 Z"/>
+            <circle class="ic-or k-pop" style="--d:2.1s" cx="150" cy="18" r="9"/>
+          </svg>
+          <span class="k-num k-pop" style="--d:2.0s">3</span>
+        </div>
+        <h3>As exceções</h3>
+        <p>Imunidades, renúncia pura, extinção de usufruto e previdência privada; a cobrança nova só vale depois da lei de cada estado</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide s26" data-title="Obrigado! Confira a lei do estado">
+<div class="k-textura"></div>
+<div class="k-marca marca-s26 rv" style="--d:.1s">Encerramento</div>
+<div class="k-enc-palco" style="left:96px;top:72px;position:absolute;z-index:1">
+<div class="mapa-s26">
+<span class="dot-s26" style="--r:0"></span>
+<span class="dot-s26" style="--r:1"></span>
+<span class="dot-s26" style="--r:2"></span>
+<span class="dot-s26" style="--r:3"></span>
+<span class="dot-s26" style="--r:4"></span>
+
+<div class="blk" style="--r:0;--c:0"><i>ok</i></div>
+<div class="blk" style="--r:0;--c:1"><i>ok</i></div>
+<div class="blk" style="--r:0;--c:2"><i>ok</i></div>
+<div class="blk blk--alvo" style="--r:0;--c:3"><i>?</i></div>
+<div class="blk" style="--r:0;--c:4"><i>ok</i></div>
+
+<div class="blk" style="--r:1;--c:0"><i>ok</i></div>
+<div class="blk" style="--r:1;--c:1"><i>ok</i></div>
+<div class="blk" style="--r:1;--c:2"><i>ok</i></div>
+<div class="blk" style="--r:1;--c:3"><i>ok</i></div>
+<div class="blk" style="--r:1;--c:4"><i>ok</i></div>
+<div class="blk" style="--r:1;--c:5"><i>ok</i></div>
+
+<div class="blk" style="--r:2;--c:0"><i>ok</i></div>
+<div class="blk" style="--r:2;--c:1"><i>ok</i></div>
+<div class="blk" style="--r:2;--c:2"><i>ok</i></div>
+<div class="blk" style="--r:2;--c:3"><i>ok</i></div>
+<div class="blk" style="--r:2;--c:4"><i>ok</i></div>
+<div class="blk" style="--r:2;--c:5"><i>ok</i></div>
+
+<div class="blk" style="--r:3;--c:0"><i>ok</i></div>
+<div class="blk" style="--r:3;--c:1"><i>ok</i></div>
+<div class="blk" style="--r:3;--c:2"><i>ok</i></div>
+<div class="blk" style="--r:3;--c:3"><i>ok</i></div>
+<div class="blk" style="--r:3;--c:4"><i>ok</i></div>
+<div class="blk" style="--r:3;--c:5"><i>ok</i></div>
+
+<div class="blk" style="--r:4;--c:1"><i>ok</i></div>
+<div class="blk" style="--r:4;--c:2"><i>ok</i></div>
+<div class="blk" style="--r:4;--c:3"><i>ok</i></div>
+<span class="anel-s26"></span>
+</div>
+
+<div class="k-balao bal-s26 k-pop" style="--d:2s">confirme na lei do estado</div>
+<p class="k-rotulo leg-s26 k-fade" style="--d:2.2s">Mapa em blocos · um bloco por estado</p>
+
+<p class="k-rotulo rot-s26 rv" style="--d:2.3s">Fim da apresentação</p>
+<div class="tit-s26 rv k-mascara" style="--d:2.4s"><h1 class="k-titulo-abertura">Obrigado!</h1></div>
+<p class="k-frase k-azul perg-s26 rv" style="--d:2.7s">Perguntas?</p>
+<p class="k-texto chama-s26 rv" style="--d:2.9s">Antes de citar, confira a lei do estado.</p>
+<p class="k-apoio apoio-s26 rv" style="--d:3.1s">Confirme o texto oficial da LC 227/2026 e a legislação do estado em questão</p>
+</div>
+</section>
+
+    <!-- ============================================ -->
+
+  </div>
+
+  <div id="progress"></div>
+  <div id="hud">
+    <button type="button" id="prev" aria-label="Slide anterior">&lsaquo;</button>
+    <button type="button" id="next" aria-label="Próximo slide">&rsaquo;</button>
+  </div>
+  <div id="hint">&larr; &rarr; para navegar e revelar &middot; F tela cheia &middot; R repetir animação &middot; número + Enter para pular</div>
+  <div class="sr" id="live" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  var vp = document.getElementById('viewport');
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var bar = document.getElementById('progress');
+  var live = document.getElementById('live');
+  var hint = document.getElementById('hint');
+  // Chave própria de cada deck, para retomar sem misturar decks abertos no mesmo navegador.
+  var STORE_KEY = 'eh-7e96cfb8-0122-4ac6-9060-1e5bf039be6e_slide_v1';
+  var i = -1, moveT, buf = '', bufT;
+
+  function fit(){
+    var s = Math.min(vp.clientWidth / 1920, vp.clientHeight / 1080);
+    stage.style.setProperty('--s', s);
+  }
+
+  // Passos (.frag) do slide atual, na ordem do HTML.
+  function steps(){ return i < 0 ? [] : Array.prototype.slice.call(slides[i].querySelectorAll('.frag')); }
+
+  function go(n, opened){
+    n = Math.max(0, Math.min(slides.length - 1, n));
+    if (n === i) return;
+    i = n;
+    slides.forEach(function(el, k){
+      el.classList.toggle('active', k === n);
+      el.setAttribute('aria-hidden', k === n ? 'false' : 'true');
+    });
+    // Entrando no slide, os passos começam escondidos; voltando com ←, já vêm abertos.
+    steps().forEach(function(f){ f.classList.toggle('on', !!opened); });
+    bar.style.width = ((n + 1) / slides.length * 100) + '%';
+    // Partes com outro destaque (ex.: class "parte-b" na section): espelhe no <body> para a barra de progresso,
+    // que fica fora dos slides, também mudar de cor (veja design-tokens.md).
+    // document.body.classList.toggle('parte-b', slides[n].classList.contains('parte-b'));
+    live.textContent = 'Slide ' + (n + 1) + ' de ' + slides.length + ': ' + (slides[n].getAttribute('data-title') || '');
+    try { history.replaceState(null, '', '#' + (n + 1)); localStorage.setItem(STORE_KEY, String(n)); } catch (e) {}
+  }
+  function next(){
+    var hidden = steps().filter(function(f){ return !f.classList.contains('on'); });
+    if (hidden.length) {
+      hidden[0].classList.add('on');
+      live.textContent = (hidden[0].textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240);
+    } else {
+      go(i + 1);
+    }
+    hideHint();
+  }
+  function prev(){
+    var shown = steps().filter(function(f){ return f.classList.contains('on'); });
+    if (shown.length) shown[shown.length - 1].classList.remove('on');
+    else go(i - 1, true);
+    hideHint();
+  }
+  function hideHint(){ hint.classList.add('gone'); }
+  function replay(){
+    // Tirar e devolver a .active depois de um reflow reinicia toda animação/transição chaveada em .slide.active.
+    var el = slides[i];
+    el.classList.remove('active');
+    void el.offsetWidth;
+    var cur = i; i = -1;
+    setTimeout(function(){ go(cur); }, 60);
+  }
+  function fullscreen(){
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); }
+    } catch (e) {}
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key >= '0' && e.key <= '9') { buf += e.key; clearTimeout(bufT); bufT = setTimeout(function(){ buf = ''; }, 1800); return; }
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ':
+        e.preventDefault(); next(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace':
+        e.preventDefault(); prev(); break;
+      case 'Enter':
+        e.preventDefault();
+        if (buf) { go(parseInt(buf, 10) - 1); buf = ''; hideHint(); } else { next(); }
+        break;
+      case 'Home': e.preventDefault(); go(0); break;
+      case 'End': e.preventDefault(); go(slides.length - 1); break;
+      case 'f': case 'F': fullscreen(); break;
+      case 'r': case 'R': replay(); break;
+    }
+  });
+
+  vp.addEventListener('click', function(e){
+    if (e.target.closest('#hud')) return;
+    if (e.clientX < vp.clientWidth * 0.25) prev(); else next();
+  });
+  document.getElementById('prev').addEventListener('click', function(e){ e.stopPropagation(); prev(); });
+  document.getElementById('next').addEventListener('click', function(e){ e.stopPropagation(); next(); });
+
+  var x0 = null;
+  vp.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, { passive: true });
+  vp.addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  document.addEventListener('mousemove', function(){
+    document.body.classList.add('moving');
+    document.body.classList.remove('idle');
+    clearTimeout(moveT);
+    moveT = setTimeout(function(){
+      document.body.classList.remove('moving');
+      if (document.fullscreenElement) document.body.classList.add('idle');
+    }, 2500);
+  });
+
+  window.addEventListener('resize', fit);
+  document.addEventListener('fullscreenchange', fit);
+  fit();
+
+  // Retomar: um #N na URL sempre vence; senão, volta ao último slide mostrado neste navegador.
+  var start = parseInt((location.hash || '').replace('#', ''), 10);
+  if (isNaN(start)) {
+    try { var sv = localStorage.getItem(STORE_KEY); if (sv !== null) start = parseInt(sv, 10) + 1; } catch (e) {}
+  }
+  go(isNaN(start) ? 0 : start - 1);
+  setTimeout(hideHint, 7500);
+})();
+</script>
+</body>
+</html>
