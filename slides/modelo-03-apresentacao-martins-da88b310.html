@@ -370,7 +370,7 @@ body.idle{ cursor:none; }
 .qa span{ display:block; margin-top:6px; font-size:23px; color:#C9D3DD; }
 
 /* ===== 18 closing ===== */
-.tr-wrap{ position:absolute; left:834px; top:140px; width:252px; height:216px; }
+.tr-wrap{ position:absolute; left:834px; top:50px; width:252px; height:216px; }
 .trophy{ left:0; top:0; }
 @keyframes trFall{ 0%{ opacity:0; transform:translateY(-300px) scale(.7); } 7%{ opacity:1; } 45%{ opacity:1; transform:translateY(-300px) scale(.7); } 70%{ opacity:1; transform:translateY(0) scale(1.15,.8); } 84%{ opacity:1; transform:translateY(-14px) scale(.95,1.06); } 100%{ opacity:1; transform:none; } }
 @keyframes idleBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
@@ -384,18 +384,18 @@ body.idle{ cursor:none; }
 .spark{ position:absolute; left:120px; top:110px; width:14px; height:14px; background:#FFD84D; opacity:0; }
 @keyframes sparkBurst{ 0%{ transform:translate(0,0); opacity:0; } 10%{ opacity:1; } 100%{ transform:translate(var(--tx),var(--ty)); opacity:0; } }
 .slide.active .spark{ animation:sparkBurst .8s cubic-bezier(.2,.7,.3,1) 1.3s both; }
-.cl-title{ position:absolute; left:0; right:0; top:400px; text-align:center; font-family:var(--display); font-weight:700; font-size:198px; line-height:1; color:#fff;
+.cl-title{ position:absolute; left:0; right:0; top:310px; text-align:center; font-family:var(--display); font-weight:700; font-size:198px; line-height:1; color:#fff;
   text-shadow:8px 8px 0 var(--sec-dk), 0 0 40px rgba(var(--sec-rgb),.4); }
 .slide.active .cl-title{ animation:stampIn .5s ease-out 1.5s both; }
-.cl-sub{ position:absolute; left:240px; right:240px; top:670px; text-align:center; font-size:34px; line-height:1.45; color:#DCE3EA; }
+.cl-sub{ position:absolute; left:240px; right:240px; top:580px; text-align:center; font-size:34px; line-height:1.45; color:#DCE3EA; }
 .slide.active .cl-sub{ animation:fadeUp .6s ease 2.1s both; }
-.pws{ position:absolute; left:120px; right:120px; top:800px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap; }
+.pws{ position:absolute; left:120px; right:120px; top:710px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap; }
 .pw{ padding:10px 18px; font-family:var(--display); font-size:32px; color:var(--sec-br); border:3px solid var(--sec); background:rgba(var(--sec-rgb),.08); }
 .pw::before{ content:"★ "; color:#FFD84D; }
 .slide.active .pw{ animation:pop .45s ease var(--d) both; }
-.cl-cont{ position:absolute; left:0; right:0; top:885px; text-align:center; font-family:var(--display); font-size:53px; color:#FFD84D; text-shadow:4px 4px 0 #6b4a00; }
+.cl-cont{ position:absolute; left:0; right:0; top:795px; text-align:center; font-family:var(--display); font-size:53px; color:#FFD84D; text-shadow:4px 4px 0 #6b4a00; }
 .slide.active .cl-cont{ animation:fadeUp .5s ease 3.6s both; }
-.cl-cred{ position:absolute; left:0; right:0; top:972px; text-align:center; font-size:22px; letter-spacing:.06em; color:var(--mut); }
+.cl-cred{ position:absolute; left:0; right:0; top:1012px; text-align:center; font-size:22px; letter-spacing:.06em; color:var(--mut); }
 
 /* chrome */
 #progress{ position:absolute; left:0; bottom:0; height:8px; width:0; background:var(--sec); box-shadow:0 0 16px var(--sec); transition:width .35s steps(6); z-index:5; }
@@ -480,8 +480,15 @@ html:not(.js) #nojs{ display:flex; position:fixed; inset:0; z-index:9999; backgr
 #sndbadge.on{ opacity:1; }
 
 /* ===== encerramento: vencedor ===== */
-.cl-win{ position:absolute; left:0; right:0; top:585px; text-align:center; font-family:var(--display); font-size:64px; color:#FFD84D; text-shadow:5px 5px 0 #6b4a00; }
+.cl-win{ position:absolute; left:0; right:0; top:495px; text-align:center; font-family:var(--display); font-size:64px; color:#FFD84D; text-shadow:5px 5px 0 #6b4a00; }
 .slide.active .cl-win{ animation:stampIn .45s ease-out 2.0s both; }
+/* ===== encerramento: UniRV + projeto ===== */
+.cl-org{ position:absolute; left:0; right:0; top:878px; display:flex; justify-content:center; align-items:center; gap:34px; }
+.org-u{ font-family:var(--display); font-size:112px; line-height:.86; color:#fff; letter-spacing:.02em; text-shadow:6px 6px 0 #B7791F, 0 0 36px rgba(255,216,77,.35); }
+.org-bar{ display:block; width:6px; height:100px; background:#FFD84D; box-shadow:4px 4px 0 #6b4a00; }
+.org-p small{ display:block; font-family:var(--sans); font-size:16px; font-weight:600; letter-spacing:.2em; color:var(--mut); }
+.org-p b{ display:block; margin:6px 0 4px; font-family:var(--display); font-weight:400; font-size:62px; line-height:.9; color:var(--sec-br); text-shadow:5px 5px 0 var(--sec-dk); }
+.slide.active .cl-org{ animation:fadeUp .6s ease 3.3s both; }
 
 /* ===== orçamento por clique ===== */
 .segs{ position:absolute; inset:0; pointer-events:none; }
@@ -1038,6 +1045,7 @@ html:not(.js) #nojs{ display:flex; position:fixed; inset:0; z-index:9999; backgr
   <p class="cl-sub">Lembra dos R$ 110? A jogada inteligente é a <b>C</b>: curtir, guardar e investir no futuro, <b>com plano</b>.</p>
   <div class="pws"><span class="pw" style="--d:2.60s">Planeje antes de gastar</span><span class="pw" style="--d:2.75s">Guarde com meta</span><span class="pw" style="--d:2.90s">Fuja do rotativo</span><span class="pw" style="--d:3.05s">Tenha um escudo</span><span class="pw" style="--d:3.20s">Comece cedo</span></div>
   <div class="cl-cont"><span class="blink">CONTINUE? ▶ PERGUNTAS</span></div>
+  <div class="cl-org"><div class="org-u">UniRV</div><span class="org-bar"></span><div class="org-p"><small>PROJETO DE EXTENSÃO</small><b>EDUCANDO PARA PROSPERAR</b><small>CIÊNCIAS CONTÁBEIS · UNIVERSIDADE DE RIO VERDE</small></div></div>
   <div class="cl-cred">EQUIPE: Gabriel Castro · Ana Luiza · Alan Neto · Janaina · Eduardo · Bruno</div>
 </section>
     <div id="splash" aria-hidden="true"><small>▶ PRÓXIMA FASE</small><b></b><span></span><em class="blink">READY?</em></div>
